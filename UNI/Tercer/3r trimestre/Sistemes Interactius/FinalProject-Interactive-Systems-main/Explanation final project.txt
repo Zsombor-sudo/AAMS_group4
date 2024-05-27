@@ -1,0 +1,12 @@
+Students:
+Alba Arcos (252024)
+Maria Beili Mena (253763)
+Mireia Pou (251725)
+
+
+Explanation: 
+In our git repository, you will find the initial structure of the final project. The principal idea is to learn the different fossils, dinosaurs, or things that can be found at a museum, by playing the game. There are two players. 
+
+This environment is located in a desert. In the middle of the desert, there are two boxes (one per player). Through all the desert, there are sand piles with objects below them. 
+
+Once the game is started, there will appear a name and a photo of a fossil in the center. Each player will need to find the corresponding item and place it inside the box. The items can be anywhere in the environment. Once they have achieved this, another item name will appear and they will need to do the same, until there are no more items. 
