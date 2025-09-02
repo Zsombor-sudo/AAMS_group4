@@ -1,0 +1,33 @@
+
+world:
+  height: 10  # the height of the world
+  width: 10   # the width of the world
+  step_time: 0.1  # 10Hz calculate each step
+  sample_time: 0.1  # 10 Hz for render and data extraction 
+  offset: [0, 0] # the offset of the world on x and y 
+
+robot:
+- kinematics: {name: 'diff'}  # omni, diff, acker
+  shape: {name: 'circle', radius: 0.2}  # radius
+  state: [4, 4, 0]  # x, y, theta
+  color: 'g' # green
+
+- kinematics: {name: 'diff'}  # omni, diff, acker
+  shape: {name: 'circle', radius: 0.2}  # radius
+  state: [2, 3, 0]  # x, y, theta
+  color: 'r' 
+
+- kinematics: {name: 'diff'}  # omni, diff, acker
+  shape: {name: 'circle', radius: 0.2}  # radius
+  state: [1, 1, 0]  # x, y, theta
+  color: 'b' 
+
+- kinematics: {name: 'diff'}  # omni, diff, acker
+  shape: {name: 'circle', radius: 0.2}  # radius
+  state: [7, 3, 0]  # x, y, theta
+  color: 'y' 
+
+- kinematics: {name: 'diff'}  # omni, diff, acker
+  shape: {name: 'circle', radius: 0.2}  # radius
+  state: [8, 6, 0]  # x, y, theta
+  color: 'k' 
