@@ -3,7 +3,7 @@ import irsim
 env = irsim.make(save_ani=False, full=False)
 env.load_behavior("custom_behavior_methods")
 
-for _i in range(250):
+for _i in range(100):
     env.step()
     env.render(0.01)
 

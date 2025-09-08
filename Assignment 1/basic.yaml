@@ -10,13 +10,14 @@ world:
 
 robot:
   - number: 4
-    # distribution: {name: 'circle', radius: 4.0, center: [5, 5]}
+    # distribution: {name: 'circle', radius: 4.0, center: [10, 10]}
     distribution: {name: 'manual'}
     kinematics: {name: 'diff'}
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
     # behavior: {name: 'rvo', vxmax: 1.0, vymax: 1.0, acce: 1.0, factor: 2.0, neighbor_threshold: 5.0}
-    behavior: {name: 'dash_custom'}
+    # behavior: {name: 'RL_circle', circle_radius: 5}
+    behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
     state: [[5, 10, 1.57],[15, 10, -1.57],[10, 5, 3.14],[10, 15, 0]]
     goal: [[10, 10, 0]]
     vel_min: [-3, -3.0]
