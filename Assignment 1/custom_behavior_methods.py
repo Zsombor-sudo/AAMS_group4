@@ -3,6 +3,7 @@ from irsim.util.util import relative_position, WrapToPi
 import numpy as np
 from pathlib import Path
 import random
+import math
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -130,9 +131,11 @@ def RL_circle(
     # file_path = Path('q_table.csv') # When executing the file while in the Assignemnt 1 folder
     file_path = Path('Assignment 1/q_table.csv') # When executing the file while in the Assignemnt 1 parent folder
 
-    # If it doesn't exist, create a Q table for 500 states (distance to center in 0.1 increments) and 314 actions (angle to center between 0 and 3.14 in 0.01 increments)
+    # If it doesn't exist, create a Q table
     if not file_path.exists():
-        q_table = np.zeros([500, 314])
+        # q_table = np.zeros([500, 314]) # 500 states (distance to center in 0.1 increments) and 314 actions (angle to center between 0 and 3.14 in 0.01 increments)
+        # q_table = np.zeros([500, 2]) # 500 states (distance to center in 0.1 increments) and 2 actions (going away from center and opposite)
+        q_table = np.zeros([50, 10]) # 50 states (distance to center in 1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
     else: # Otherwise load the Q table:
         q_table = np.loadtxt(file_path, delimiter=',')
 
@@ -140,18 +143,23 @@ def RL_circle(
     # In my RL environment the distance is the state
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
-    distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    # distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    distance = int(round(distance)) # Round the distance to nearest integer to get the current state
 
     # If first step, don't calculate Q value
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
     else: # Calculate new Q value:
-        reward = abs(circle_radius*10 - distance) * 100
+        ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
+        # reward = -abs(circle_radius*10 - distance) * 100
+        # reward = -abs(circle_radius - distance) * 100
+        # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
+        reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
         next_max = np.max(q_table[distance])
 
-        new_value = (1 - alpha) * old_value + alpha * (-reward + gamma * next_max)
+        new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
         q_table[RL_circle.old_distance, RL_circle.old_action] = new_value
         
         # Save the Q table:
@@ -159,15 +167,16 @@ def RL_circle(
 
     # Decide next action:
     if random.uniform(0,1) < epsilon:
-        action = random.uniform(0, 314) # Explore action space
+        action = random.randrange(q_table.shape[1]) # Explore action space
     else:
         action = np.argmax(q_table[distance]) # Exploit learned values
 
     RL_circle.old_action = int(action)
+    RL_circle.old_distance = distance
 
     ## Set next step:
     # Calculate angular:
-    radian += action / 100
+    radian += (action / q_table.shape[1]) * np.pi
     diff_radian = WrapToPi(radian - state[2, 0])
     angular = max_vel[1, 0] * np.sign(diff_radian)
 
