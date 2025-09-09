@@ -124,9 +124,9 @@ def RL_circle(
     # Always move forward at a set speed
     linear = max_vel[0, 0]
 
-    # Set angle according to q_table:
+    # Set angle :
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
 
-    angular = 
+    angular = 0
 
     return np.array([[linear], [angular]])
