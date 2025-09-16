@@ -17,10 +17,11 @@ import irsim
 # So maybe try and tweak the reward system more
 
 for i in range(1):
-    env = irsim.make(save_ani=False, full=False)
+    # env = irsim.make(save_ani=False, full=False, display=False)
+    env = irsim.make(save_ani=False, full=False, display=True)
     env.load_behavior("custom_behavior_methods")
 
-    for _i in range(1000):
+    for _i in range(500):
         env.step()
         env.render(0.01)
 
@@ -28,3 +29,4 @@ for i in range(1):
             break
 
     env.end(1)
+    

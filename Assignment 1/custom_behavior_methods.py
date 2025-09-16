@@ -154,7 +154,7 @@ def RL_circle(
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
-        reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
+        reward = 5 * (1 / (1 + 0.1 * math.pow(distance - circle_radius, 2)))
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
         next_max = np.max(q_table[distance])
@@ -178,9 +178,12 @@ def RL_circle(
     # Calculate angular:
     radian += (action / q_table.shape[1]) * np.pi
     diff_radian = WrapToPi(radian - state[2, 0])
-    angular = max_vel[1, 0] * np.sign(diff_radian)
+    # angular = max_vel[1, 0] * np.sign(diff_radian)
+    # angular = np.clip(1 * diff_radian, -max_vel[1, 0], max_vel[1, 0])
+    angular = max_vel[1, 0] * np.tanh(0.5 * diff_radian)
 
     # Always move forward at a set speed
-    linear = max_vel[0, 0]
+    # linear = max_vel[0, 0] * np.cos(diff_radian)
+    linear = max_vel[0, 0] * (np.cos(diff_radian) + 1) / 2  
 
     return np.array([[linear], [angular]]) 
