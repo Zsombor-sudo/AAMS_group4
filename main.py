@@ -1,0 +1,13 @@
+import irsim
+
+env = irsim.make(save_ani=False, full=False, world_name="robot_world.yaml")
+env.load_behavior("custom_behavior")
+
+for _i in range(2000):
+    env.step()
+    env.render(0.01)
+
+    if env.done():
+        break
+
+env.end(3)

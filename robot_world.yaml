@@ -1,0 +1,26 @@
+world:
+  height: 10
+  width: 10
+
+robot:
+  - number: 1
+    kinematics: {name: 'diff'}
+    shape:
+      - {name: 'circle', radius: 0.2}
+    behavior: {name: 'docircle'}
+    state: [1.0, 1.0, 0.0]
+    vel_min: [-3, -3.0]
+    vel_max: [3, 3.0]
+    color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown']
+    arrive_mode: position
+    goal: [5, 5, 0]
+    goal_threshold: 0.15
+    plot:
+      show_trail: true
+      show_goal: true
+      trail_fill: true
+      trail_alpha: 0.2
+      show_trajectory: false
+obstacle:
+  - shape: {name: 'circle', radius: 2.0}  # radius
+    state: [5, 5, 0]  
