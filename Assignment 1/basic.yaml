@@ -10,7 +10,7 @@ world:
 
 
 robot:
-  - number: 1
+  - number: 4
     # distribution: {name: 'circle', radius: 4.0, center: [10, 10]}
     distribution: {name: 'manual'}
     kinematics: {name: 'diff'}

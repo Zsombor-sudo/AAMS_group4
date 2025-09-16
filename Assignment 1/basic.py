@@ -16,7 +16,7 @@ import irsim
 # Reduced states down to 50 and actions down to 10, seems to work better now, still doesn't follow the circle that well tho
 # So maybe try and tweak the reward system more
 
-for i in range(10):
+for i in range(1):
     env = irsim.make(save_ani=False, full=False)
     env.load_behavior("custom_behavior_methods")
 
