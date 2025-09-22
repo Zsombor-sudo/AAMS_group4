@@ -21,6 +21,7 @@ robot:
     # behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
     accDistance: 0
     state: [[5, 15, 1.57],[25, 15, -1.57],[15, 5, 3.14],[15, 25, 0]]
+    robotid: [[0],[1],[2],[3]]
     goal: [[15, 15, 0]]
     vel_min: [-3, -3.0]
     vel_max: [3, 3.0]

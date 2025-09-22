@@ -8,6 +8,12 @@ import math
 
 global textpos
 textpos = 0
+#errLabelObj = plt.gcf()
+#errLabelText = [errLabelObj.text(0.1, 0.1, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.2, 0.1, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.3, 0.1, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.4, 0.1, "Placeholder ", ha="left", va="top")]
+
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -26,6 +32,7 @@ def beh_diff_dash(
         np.array: Velocity [linear, angular] (2x1) for differential drive.
     """
 
+    
     state = ego_object.state
     goal = ego_object.goal
     #ego_object.accDistance = 4;
@@ -97,6 +104,8 @@ def beh_diff_dash(
 ) -> np.ndarray:
 
     state = ego_object.state
+    robotid = ego_object.id
+    print(robotid)
     goal = ego_object.goal
     goal_threshold = ego_object.goal_threshold
     _, max_vel = ego_object.get_vel_range()
@@ -114,10 +123,9 @@ def beh_diff_dash(
 
         return np.zeros((2, 1))
 
-    print(state)
+    #print(state)
     return RL_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, alpha, gamma, epsilon)
 
-robotId=0
 def RL_circle(
     state: np.ndarray,
     goal: np.ndarray,
@@ -131,7 +139,7 @@ def RL_circle(
     accDistance: float = 0
 ) -> np.ndarray:
 
-    global hud
+    
     ### Source: ###
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
     
@@ -158,14 +166,15 @@ def RL_circle(
     
     distance = int(round(distance)) # Round the distance to nearest integer to get the current state
     # If first step, don't calculate Q value
+    #errLabelText = None
+
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
         RL_circle.accDistance = 0
         RL_circle.iterations = 1
-        hud = plt.gcf().text(state[0]/30, state[1]/30, "43434 ", ha="left", va="top")  # figure coords (0..1)
         #robotId += 1
-        hud.set_text(f"Error {robotId}")
-        print(state)
+        #hud.set_text(f"Error {robotId}")
+        #print(state)
         #hud1 = hud.text(0.1+robotId/10, 0.2, "43434 ", ha="left", va="top")
     else: # Calculate new Q value:
         ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
@@ -185,9 +194,10 @@ def RL_circle(
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
 
-    #print(RL_circle.accDistance)
-    #print(irsim.world.robots.id)
-    hud.set_text(f"Error {abs(distance - circle_radius)} {RL_circle.accDistance} {RL_circle.accDistance/RL_circle.iterations}")
+        #print(RL_circle.accDistance)
+        #print(irsim.world.robots.id)
+        
+    #errLabelText[2].set_text(f"Error {abs(distance - circle_radius)} {RL_circle.accDistance} {RL_circle.accDistance/RL_circle.iterations}")
     
 
     # Decide next action:
