@@ -24,7 +24,7 @@ env = irsim.make('basic.yaml')
 # env.load_behavior("custom_behavior_methods")
 
 trainingLength = 100
-for i in range(traininglength):
+for i in range(trainingLength):
     state = env.reset()
 
     epochs, penalties, reward, = 0, 0, 0

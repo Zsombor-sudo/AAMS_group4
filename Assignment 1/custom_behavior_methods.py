@@ -1,9 +1,13 @@
 from irsim.lib import register_behavior
 from irsim.util.util import relative_position, WrapToPi
+import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 import random
 import math
+
+global textpos
+textpos = 0
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -24,6 +28,7 @@ def beh_diff_dash(
 
     state = ego_object.state
     goal = ego_object.goal
+    #ego_object.accDistance = 4;
     goal_threshold = ego_object.goal_threshold
     _, max_vel = ego_object.get_vel_range()
     angle_tolerance = kwargs.get("angle_tolerance", 0.1)
@@ -109,9 +114,10 @@ def beh_diff_dash(
 
         return np.zeros((2, 1))
 
+    print(state)
     return RL_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, alpha, gamma, epsilon)
 
-
+robotId=0
 def RL_circle(
     state: np.ndarray,
     goal: np.ndarray,
@@ -122,8 +128,10 @@ def RL_circle(
     alpha: float = 0.1,
     gamma: float = 0.6,
     epsilon: float = 0.1,
+    accDistance: float = 0
 ) -> np.ndarray:
 
+    global hud
     ### Source: ###
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
     
@@ -144,16 +152,28 @@ def RL_circle(
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
     # distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    #irsim.env.env_plot.EnvPlot.update()
+    
+    #accDistance = accDistance + 4
+    
     distance = int(round(distance)) # Round the distance to nearest integer to get the current state
-
     # If first step, don't calculate Q value
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
+        RL_circle.accDistance = 0
+        RL_circle.iterations = 1
+        hud = plt.gcf().text(state[0]/30, state[1]/30, "43434 ", ha="left", va="top")  # figure coords (0..1)
+        #robotId += 1
+        hud.set_text(f"Error {robotId}")
+        print(state)
+        #hud1 = hud.text(0.1+robotId/10, 0.2, "43434 ", ha="left", va="top")
     else: # Calculate new Q value:
         ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
+        RL_circle.accDistance += abs(distance - circle_radius)
+        RL_circle.iterations += 1
         reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
@@ -164,6 +184,11 @@ def RL_circle(
         
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
+
+    #print(RL_circle.accDistance)
+    #print(irsim.world.robots.id)
+    hud.set_text(f"Error {abs(distance - circle_radius)} {RL_circle.accDistance} {RL_circle.accDistance/RL_circle.iterations}")
+    
 
     # Decide next action:
     if random.uniform(0,1) < epsilon:
