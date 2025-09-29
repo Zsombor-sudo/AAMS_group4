@@ -1,9 +1,16 @@
 from irsim.lib import register_behavior
 from irsim.util.util import relative_position, WrapToPi
+import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 import random
 import math
+
+errLabelObj = plt.gcf()
+errLabelText = [errLabelObj.text(0.15, 0.7, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.8, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top")]
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -91,6 +98,8 @@ def beh_diff_dash(
     ego_object: any, external_objects: list[any], **kwargs: any
 ) -> np.ndarray:
 
+    robotid = ego_object.id
+    print(robotid)
     state = ego_object.state
     goal = ego_object.goal
     goal_threshold = ego_object.goal_threshold
@@ -109,7 +118,7 @@ def beh_diff_dash(
 
         return np.zeros((2, 1))
 
-    return RL_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, alpha, gamma, epsilon)
+    return RL_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, alpha, gamma, epsilon, robotid)
 
 
 def RL_circle(
@@ -122,8 +131,10 @@ def RL_circle(
     alpha: float = 0.1,
     gamma: float = 0.6,
     epsilon: float = 0.1,
+    robotid: int = 0
 ) -> np.ndarray:
 
+    
     ### Source: ###
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
     
@@ -144,16 +155,21 @@ def RL_circle(
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
     # distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    distance_float = distance 
     distance = int(round(distance)) # Round the distance to nearest integer to get the current state
 
     # If first step, don't calculate Q value
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
+        RL_circle.accDistance = 0
+        RL_circle.iterations = 1
     else: # Calculate new Q value:
         ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
+        RL_circle.accDistance += abs(distance_float - circle_radius)
+        RL_circle.iterations += 1
         reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
@@ -165,6 +181,7 @@ def RL_circle(
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
 
+    errLabelText[robotid].set_text(f"Error {abs(distance - circle_radius)} {RL_circle.accDistance} {RL_circle.accDistance/RL_circle.iterations}")
     # Decide next action:
     if random.uniform(0,1) < epsilon:
         action = random.randrange(q_table.shape[1]) # Explore action space
