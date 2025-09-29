@@ -128,14 +128,15 @@ def RL_circle(
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
     
     ## Create/Load Q table:
-    # file_path = Path('q_table.csv') # When executing the file while in the Assignemnt 1 folder
-    file_path = Path('Assignment 1/q_table.csv') # When executing the file while in the Assignemnt 1 parent folder
+    file_path = Path('q_table.csv') # When executing the file while in the Assignemnt 1 folder
+    # file_path = Path('Assignment 1/q_table.csv') # When executing the file while in the Assignemnt 1 parent folder
 
     # If it doesn't exist, create a Q table
     if not file_path.exists():
         # q_table = np.zeros([500, 314]) # 500 states (distance to center in 0.1 increments) and 314 actions (angle to center between 0 and 3.14 in 0.01 increments)
         # q_table = np.zeros([500, 2]) # 500 states (distance to center in 0.1 increments) and 2 actions (going away from center and opposite)
-        q_table = np.zeros([50, 10]) # 50 states (distance to center in 1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
+        q_table = np.zeros([500, 10]) # 500 states (distance to center in 0.1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
+        # q_table = np.zeros([50, 10]) # 50 states (distance to center in 1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
     else: # Otherwise load the Q table:
         q_table = np.loadtxt(file_path, delimiter=',')
 
@@ -143,9 +144,11 @@ def RL_circle(
     # In my RL environment the distance is the state
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
-    # distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
-    distance = int(round(distance)) # Round the distance to nearest integer to get the current state
+    distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    # distance = int(round(distance)) # Round the distance to nearest integer to get the current state
 
+    print(distance)
+    
     # If first step, don't calculate Q value
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
@@ -154,7 +157,10 @@ def RL_circle(
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
-        reward = 5 * (1 / (1 + 0.1 * math.pow(distance - circle_radius, 2)))
+        # reward = 5 * (1 / (1 + 0.1 * math.pow(distance - circle_radius, 2))) - 0.5
+        # reward = 50 * (1 / (1 + 0.01 * math.pow(distance - circle_radius*10, 2))) - 5
+        reward = -0.025 * math.pow(distance - circle_radius*10, 2)
+        # reward = -0.5 * math.pow(distance - circle_radius, 2)
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
         next_max = np.max(q_table[distance])
