@@ -6,12 +6,15 @@ from pathlib import Path
 import random
 import math
 
-errLabelObj = plt.gcf()
-errLabelText = [errLabelObj.text(0.15, 0.7, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.8, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top")]
 
+errLabelObj = plt.gcf()
+errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.80, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top"),
+                errLabelObj.text(0.15, 0.90, "Placeholder ", ha="left", va="top")]
+
+#explaination label
+plt.gcf().text(0.15,0.95,"Current error | accumulated error | average error per iteration", ha="left", va="top")
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
     ego_object: any, external_objects: list[any], **kwargs: any
@@ -181,7 +184,7 @@ def RL_circle(
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
 
-    errLabelText[robotid].set_text(f"Error {abs(distance - circle_radius)} {RL_circle.accDistance} {RL_circle.accDistance/RL_circle.iterations}")
+    errLabelText[robotid].set_text(f" {abs(distance - circle_radius)}  ||  {round(RL_circle.accDistance, 2)}  ||  {round(RL_circle.accDistance/RL_circle.iterations, 2)}")
     # Decide next action:
     if random.uniform(0,1) < epsilon:
         action = random.randrange(q_table.shape[1]) # Explore action space
