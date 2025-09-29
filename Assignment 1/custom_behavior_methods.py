@@ -159,8 +159,16 @@ def RL_circle(
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
         # reward = 5 * (1 / (1 + 0.1 * math.pow(distance - circle_radius, 2))) - 0.5
         # reward = 50 * (1 / (1 + 0.01 * math.pow(distance - circle_radius*10, 2))) - 5
-        reward = -0.025 * math.pow(distance - circle_radius*10, 2)
         # reward = -0.5 * math.pow(distance - circle_radius, 2)
+        # reward = -0.025 * math.pow(distance - circle_radius*10, 2)
+        circle_radius = circle_radius * 10
+        if distance > circle_radius:
+            reward = 2*(-distance + circle_radius)
+        if distance < circle_radius:
+            reward = 2*(distance - circle_radius)
+        if distance == circle_radius:
+            reward = 10
+
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
         next_max = np.max(q_table[distance])
