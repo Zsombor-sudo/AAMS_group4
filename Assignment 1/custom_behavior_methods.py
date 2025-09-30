@@ -103,7 +103,6 @@ def beh_diff_dash(
 ) -> np.ndarray:
 
     robotid = ego_object.id
-    print(robotid)
     state = ego_object.state
     goal = ego_object.goal
     goal_threshold = ego_object.goal_threshold
