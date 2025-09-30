@@ -1,0 +1,75 @@
+\documentclass[style=AU]{CustomThesis}
+
+% Import the bibliography file
+\addbibresource{Reference.bib} 
+% \BiblatexSplitbibDefernumbersWarningOff
+
+% Metadata:
+\title{Assignment 1}
+\department{Department of Electrical and Computer Engineering}
+\shortdesc{Implementing robot circling with RL\\and measuring individual vs. group\\performance}
+
+% ----------------------------------------------------------------------------------------
+% Rapport starts here
+% ----------------------------------------------------------------------------------------
+\begin{document}
+%TC:ignore
+
+\pagenumbering{gobble} %ingen sidenumre
+\thispagestyle{empty}
+\newgeometry{top=2.5cm, bottom=0cm}
+
+% \input{Forside}
+\input{FrontPage}
+
+\pagenumbering{Roman}
+
+\clearpage
+\tableofcontents
+
+\clearpage
+\listoffigures
+
+\clearpage
+\listoftables
+%TC:endignore
+
+\pagenumbering{arabic} %sidenumre starter fra 1
+
+\input{Rapport/1. Implementation.tex}
+
+\input{Rapport/2. Results.tex}
+
+\input{Rapport/3. Conclusion.tex}
+
+%TC:ignore
+\clearpage
+
+% Custom header til bibliografi
+% \fancyhead[L]{\color{StyleColorDark}\StyleFontRegular{}\nouppercase{Bibliografi}}
+% \fancyhead[R]{\includegraphics[height=16px]{Figure/misc/aulogo_dk_var2_blaa.eps}}
+% \renewcommand{\headrule}{{\color{StyleColorDark}\hrule width\headwidth height\headrulewidth}}  % Apply color to the top rule
+% \setlength{\headheight}{24pt}
+
+% \section*{Bibliografi}
+% \addcontentsline{toc}{section}{Bibliografi}
+% \printbibliography[title={\large Hjemmesider}, type={online}]
+% \printbibliography[title={\large Bøger}, type={book}]
+% \printbibliography[title={\large Datablade}, type={datasheet}]
+% \printbibliography[title={\large Øvrige}, type={misc}]
+% \printbibliography[title={\large Bilag}, type={bilag}]
+
+\clearpage
+
+% Custom header til appendix
+\fancyhead[L]{\color{StyleColorDark}\StyleFontRegular{}\nouppercase{Bilag}}
+\fancyhead[R]{\includegraphics[height=16px]{Figure/misc/aulogo_dk_var2_blaa.eps}}
+\renewcommand{\headrule}{{\color{StyleColorDark}\hrule width\headwidth height\headrulewidth}}  % Apply color to the top rule
+\setlength{\headheight}{24pt}
+
+\appendix
+
+
+
+%TC:endignore
+\end{document}
