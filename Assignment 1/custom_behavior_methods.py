@@ -15,6 +15,7 @@ errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"
 
 #explaination label
 plt.gcf().text(0.15,0.95,"Current error | accumulated error | average error per iteration", ha="left", va="top")
+
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
     ego_object: any, external_objects: list[any], **kwargs: any
@@ -158,12 +159,16 @@ def RL_circle(
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
     # distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
+    
+    #float value of distance
     distance_float = distance 
     distance = int(round(distance)) # Round the distance to nearest integer to get the current state
 
     # If first step, don't calculate Q value
     if not hasattr(RL_circle, "old_distance"):
         RL_circle.old_distance = distance
+        
+        #init error variables
         RL_circle.accDistance = 0
         RL_circle.iterations = 1
     else: # Calculate new Q value:
@@ -171,8 +176,11 @@ def RL_circle(
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
+        
+        #updating error
         RL_circle.accDistance += abs(distance_float - circle_radius)
         RL_circle.iterations += 1
+        
         reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
@@ -184,7 +192,9 @@ def RL_circle(
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
 
+    #printing error
     errLabelText[robotid].set_text(f" {abs(distance - circle_radius)}  ||  {round(RL_circle.accDistance, 2)}  ||  {round(RL_circle.accDistance/RL_circle.iterations, 2)}")
+    
     # Decide next action:
     if random.uniform(0,1) < epsilon:
         action = random.randrange(q_table.shape[1]) # Explore action space
