@@ -1,0 +1,88 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{CustomThesis}[24/09/25 A Thesis preamble for Aarhus University]
+
+% I should still evaluate which packages are really necesarry/which could be commented out
+% I should also evaluate the fonts used for the default style a bit more
+% It would be cool to fully automate the front page, so that everthing is filled out from the 
+% main file using metadata, like what i have done now for title etc.
+
+% --- Language and page geometry ---
+\usepackage[english]{babel}
+% \usepackage[a4paper, total={6.5in, 9in}]{geometry}
+
+% --- Custom commands and helpers ---
+\usepackage{CustomCommands} % Your own macros and redefinitions
+\usepackage{adjustbox}      % Adjust size/position of content (esp. tables/figures)
+\usepackage{tabularx}       % Tables with automatically stretched columns
+\usepackage{booktabs}       % Professional-looking horizontal rules in tables
+
+% --- Bibliography / references ---
+\usepackage[sorting=none]{biblatex} % Modern bibliography system
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{} % Remove default "References" header
+\usepackage{csquotes}       % Context-sensitive quotation marks (needed by biblatex)
+\renewcommand{\UrlFont}{\small\ttfamily}
+\DeclareBibliographyDriver{datasheet}{%
+  \printnames{author}%
+  \newunit\newblock
+  \printfield{title}%
+  \newunit\newblock
+  \printfield{note}%
+}
+
+% --- Figures and floats ---
+\usepackage{subcaption} % Subfigures with individual captions
+\usepackage{float}      % More control over float placement
+\usepackage{graphicx}   % Include images (pdf, png, jpg, etc.)
+\usepackage{wrapfig}    % Text wrapping around figures
+\usepackage{svg}        % Include SVG images (converted via Inkscape)
+\usepackage{eso-pic}    % Add background material (for title page, watermark, etc.)
+
+% --- Code listings ---
+\usepackage{minted} % Code highlighting via Pygments (requires -shell-escape)
+\usemintedstyle{manni} % Default minted style
+% Example custom settings:
+\setminted[cpp]{fontsize=\small, linenos}
+\setminted[python]{fontsize=\small, linenos, bgcolor=LightGray}
+\setminted[c]{fontsize=\small, linenos, bgcolor=LightGray}
+\setminted[matlab]{fontsize=\small, linenos, bgcolor=LightGray}
+\renewcommand{\theFancyVerbLine}{\color{DarkGray}\small\ttfamily{\arabic{FancyVerbLine}}} % Line number style
+\newenvironment{code}{\captionsetup{type=figure}}{} % Treat code blocks like figures
+
+% --- Math support ---
+\usepackage{mathtools} % Extensions to amsmath
+\usepackage{amsmath}   % AMS math (equations, matrices, align, etc.)
+\usepackage{nicematrix} % Nicely formatted matrices with rules/lines
+
+% --- Tables ---
+\usepackage{makecell}  % Multi-line and formatted table cells
+\usepackage{multirow}  % Multi-row cells
+\usepackage{array}     % Extra column formatting options
+\usepackage{colortbl}  % Color rows/columns/cells
+\renewcommand{\arraystretch}{1.5} % Increase row spacing
+
+% --- Text formatting ---
+\usepackage{ragged2e}  % Better ragged alignment
+\usepackage{enumitem}  % Customizable lists
+\usepackage{changepage} % Environment for indented/narrow text blocks
+
+% --- Units ---
+\usepackage{siunitx} % SI units and number formatting
+\sisetup{
+    output-decimal-marker = {,},
+    group-separator = {.},
+    per-mode = symbol
+}
+
+% --- Microtypography ---
+% Better text line breaking
+% \usepackage[
+%     activate={true,nocompatibility},
+%     final,
+%     tracking=true,
+%     factor=1100,
+%     stretch=10,
+%     shrink=10
+% ]{microtype}
+% \SetTracking{encoding={*}, shape=sc}{40}
+
+\endinput

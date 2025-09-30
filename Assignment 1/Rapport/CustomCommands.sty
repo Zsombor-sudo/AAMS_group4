@@ -1,0 +1,57 @@
+\ProvidesPackage{CustomCommands}[24/09/25 Custom commands]
+
+% Word commands
+% For defining words with commands to ensure uniform spelling/formatting. Also allows for tweaking/chaning the names through the whole document easily
+\newcommand{\teacher}{Mirgita Frasheri and Lukas Esterle}
+
+% Formatting commands
+\newcommand{\newPara}{\vspace{\baselineskip}}
+
+\usepackage{etoolbox} % for robust trimming and string handling
+
+% \newcommand{\quickwordcount}[1]{%
+%   \immediate\write18{texcount -0 -sum -merge -inc #1.tex > #1-words.sum}%
+%   \input{#1-words.sum}%
+% }
+\newcommand{\quickwordcount}[1]{%
+  % Run texcount and write output to file
+  \immediate\write18{texcount -0 -sum -merge -inc #1.tex > #1-words.sum}%
+  % Open the file and read
+  \newread\tmpfile
+  \openin\tmpfile=#1-words.sum
+  \read\tmpfile to \thewordraw
+  \closein\tmpfile
+  % Remove spaces/newlines
+  \edef\theword{\expandafter\stripspaces\thewordraw}%
+}
+
+\newcommand{\quickcharcount}[1]{%
+  % Run texcount and write output to file
+  \immediate\write18{texcount -0 -sum -merge -char -inc #1.tex > #1-chars.sum}%
+  % Open the file and read
+  \newread\tmpfile
+  \openin\tmpfile=#1-chars.sum
+  \read\tmpfile to \thecharraw
+  \closein\tmpfile
+  % Remove spaces/newlines
+  \edef\thechar{\expandafter\stripspaces\thecharraw}%
+}
+
+% Helper macro to remove spaces
+\newcommand{\stripspaces}[1]{%
+  \romannumeral-`0\expandafter\strip@spaces#1 \relax
+}
+\def\strip@spaces#1 #2\relax{%
+  #1\ifx\\#2\\\else\strip@spaces#2\relax\fi%
+}
+
+\newcommand{\wordTotal}[1]{\numexpr \quickcharcount{#1} + \quickwordcount{#1}} \relax
+
+% \newcommand{\ewoudref}[1]{\hyperref[#1]{\ref*{#1} ``\nameref*{#1}''}}         % Version med anførelses tegn
+\newcommand{\ewoudref}[1]{\hyperref[#1]{\ref*{#1} \textit{\nameref*{#1}}}}      % Version med skråskrift
+
+\newenvironment{enumlist}%
+  {\begin{enumerate}%
+    \setlength{\itemsep}{0pt}%
+    \setlength{\parskip}{0pt}}%
+  {\end{enumerate}}

@@ -1,0 +1,81 @@
+% FORSIDEN - START
+
+% Add background picture
+\newcommand\BackgroundPicFrontPage{%
+    \put(0,0){%
+    \parbox[b][\paperheight]{\paperwidth}{%
+    \vfill
+    \centering
+    \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{Figure/misc/forside_baggrund.pdf}%
+    \vfill
+}}}
+\AddToShipoutPictureBG*{\BackgroundPicFrontPage}
+
+% Add UNI logo if available
+\FrontPageLogo
+        
+\printdepartment
+
+\vspace{2mm}
+
+\printtitle
+
+\vspace{6mm}
+
+\printshortdesc
+
+\vspace{10mm}
+
+\noindent\textcolor{StyleColorDark}{\Large\StyleFontBold{}Group 4}
+
+\vspace{4mm}
+
+\noindent\textcolor{StyleColorDark}{\noindent\Large\StyleFontBold{}Alba Arcos I Ribas} \\[1mm]
+\StyleFontItalic{Student no. 202503224}
+
+\vspace{8mm}
+
+\noindent\textcolor{StyleColorDark}{\noindent\Large\StyleFontBold{}Birnir Þór Árnason} \\[1mm]
+\StyleFontItalic{Student no. 202503220}
+
+\vspace{8mm}
+
+\noindent\textcolor{StyleColorDark}{\noindent\Large\StyleFontBold{}Martin Skelde Krøjmand} \\[1mm]
+\StyleFontItalic{Student no. 201710685}
+
+\vspace{8mm}
+
+\noindent\textcolor{StyleColorDark}{\noindent\Large\StyleFontBold{}Wouter Jonathan Oudijk} \\[1mm]
+\StyleFontItalic{Student no. 202109059}
+
+\vspace{8mm}
+
+\noindent\textcolor{StyleColorDark}{\noindent\Large\StyleFontBold{}Zsombor Krisztián Szöke} \\[1mm]
+\StyleFontItalic{Student no. 202411164}
+    
+\vfill
+% \vspace{10mm}
+
+\noindent\textcolor{StyleColorDark}{{\StyleFontBold Teacher:} {\StyleFontRegular \teacher}}
+
+\vspace{8mm}
+
+% Character count with TeXcount:
+\quickcharcount{main}
+\quickwordcount{main}
+\noindent\color{StyleColorDark}{{\StyleFontBold Number of characters:} {\StyleFontRegular \the\numexpr\thechar+\theword\relax\ (\the\numexpr(\thechar+\theword)/2400\relax\ standard pages)}}
+% Manual character count:
+% \noindent\color{StyleColorDark}{\StyleFontBold{Number of characters:} \StyleFontRegular{xxxxx (xx standard pages)}}
+
+% \vfill
+\vspace{30mm}
+
+\noindent\textcolor{StyleColorDark}{\StyleFontRegular{Aarhus, \today}}
+
+\vspace{30mm}
+
+%TC:endignore
+\normalfont
+\restoregeometry
+\clearpage
+% FORSIDEN - SLUT  
