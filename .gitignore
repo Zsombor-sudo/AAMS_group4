@@ -6,9 +6,10 @@ __pycache__/
 *.sum
 *.minted
 *.aux
-*.bbl
-*.bbl-SAVE-ERROR
-*.bcf
+*.bbl*
+# *.bbl-SAVE-ERROR
+*.bcf*
+# *.bcf-SAVE-ERROR
 *.blg
 *.fdb_latexmk
 *.fls

@@ -15,10 +15,10 @@
 % }
 \newcommand{\quickwordcount}[1]{%
   % Run texcount and write output to file
-  \immediate\write18{texcount -0 -sum -merge -inc #1.tex > #1-words.sum}%
+  \immediate\write18{texcount -0 -sum -merge -inc #1.tex > \MainFileDir/#1-words.sum}%
   % Open the file and read
   \newread\tmpfile
-  \openin\tmpfile=#1-words.sum
+  \openin\tmpfile=\MainFileDir/#1-words.sum
   \read\tmpfile to \thewordraw
   \closein\tmpfile
   % Remove spaces/newlines
@@ -27,10 +27,10 @@
 
 \newcommand{\quickcharcount}[1]{%
   % Run texcount and write output to file
-  \immediate\write18{texcount -0 -sum -merge -char -inc #1.tex > #1-chars.sum}%
+  \immediate\write18{texcount -0 -sum -merge -char -inc #1.tex > \MainFileDir/#1-chars.sum}%
   % Open the file and read
   \newread\tmpfile
-  \openin\tmpfile=#1-chars.sum
+  \openin\tmpfile=\MainFileDir/#1-chars.sum
   \read\tmpfile to \thecharraw
   \closein\tmpfile
   % Remove spaces/newlines
