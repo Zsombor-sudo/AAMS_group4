@@ -14,7 +14,7 @@ errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"
                 errLabelObj.text(0.15, 0.90, "Placeholder ", ha="left", va="top")]
 
 #explaination label
-plt.gcf().text(0.15,0.95,"Current error | accumulated error | average error per iteration", ha="left", va="top")
+plt.gcf().text(0.15,0.95,"Current error [m] | accumulated error [m] | average error per iteration [m/iter]", ha="left", va="top")
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
