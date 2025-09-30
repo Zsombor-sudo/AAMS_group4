@@ -9,6 +9,7 @@ __pycache__/
 *.bbl
 *.bbl-SAVE-ERROR
 *.bcf
+*.blg
 *.fdb_latexmk
 *.fls
 *.lof
@@ -16,7 +17,7 @@ __pycache__/
 *.lot
 *.out
 *.run.xml
-*.synctex.gz
+*.gz
 *.toc
 
 # ## Core latex/pdflatex auxiliary files:
