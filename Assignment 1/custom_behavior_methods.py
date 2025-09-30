@@ -5,16 +5,18 @@ import numpy as np
 from pathlib import Path
 import random
 import math
+from Metrics import Metrics
 
-
-errLabelObj = plt.gcf()
-errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.80, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.90, "Placeholder ", ha="left", va="top")]
+#default radius on 1
+metrics = Metrics(1)
+#errLabelObj = plt.gcf()
+#errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.15, 0.80, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top"),
+#                errLabelObj.text(0.15, 0.90, "Placeholder ", ha="left", va="top")]
 
 #explaination label
-plt.gcf().text(0.15,0.95,"Current error [m] | accumulated error [m] | average error per iteration [m/iter]", ha="left", va="top")
+#plt.gcf().text(0.15,0.95,"Current error [m] | accumulated error [m] | average error per iteration [m/iter]", ha="left", va="top")
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -109,6 +111,7 @@ def beh_diff_dash(
     _, max_vel = ego_object.get_vel_range()
     angle_tolerance = kwargs.get("angle_tolerance", 0.1)
     circle_radius = kwargs.get("circle_radius", 5)
+    metrics.setCircleRadius(circle_radius)
     alpha = kwargs.get("alpha", 0.1) # Learning rate
     gamma = kwargs.get("gamma", 0.6) # Discount factor
     epsilon = kwargs.get("epsilon", 0.1) # Exploration/Exploitation trade off
@@ -168,8 +171,9 @@ def RL_circle(
         RL_circle.old_distance = distance
         
         #init error variables
-        RL_circle.accDistance = 0
-        RL_circle.iterations = 1
+        #metrics.initRobot(circle_radius)
+        #RL_circle.accDistance = 0
+        #RL_circle.iterations = 1
     else: # Calculate new Q value:
         ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
         # reward = -abs(circle_radius*10 - distance) * 100
@@ -177,8 +181,9 @@ def RL_circle(
         # reward = (math.pow(np.finfo(np.float32).eps, math.pow(-(distance - circle_radius), 2))) * 100  
         
         #updating error
-        RL_circle.accDistance += abs(distance_float - circle_radius)
-        RL_circle.iterations += 1
+        metrics.update(robotid, distance_float)
+        #RL_circle.accDistance += abs(distance_float - circle_radius)
+        #RL_circle.iterations += 1
         
         reward = 2 * (1 / (1 + 5 * math.pow(distance - circle_radius, 2)))
 
@@ -192,7 +197,8 @@ def RL_circle(
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
 
     #printing error
-    errLabelText[robotid].set_text(f" {abs(distance - circle_radius)}  ||  {round(RL_circle.accDistance, 2)}  ||  {round(RL_circle.accDistance/RL_circle.iterations, 2)}")
+    metrics.print(robotid)
+    #errLabelText[robotid].set_text(f" {abs(distance - circle_radius)}  ||  {round(RL_circle.accDistance, 2)}  ||  {round(RL_circle.accDistance/RL_circle.iterations, 2)}")
     
     # Decide next action:
     if random.uniform(0,1) < epsilon:

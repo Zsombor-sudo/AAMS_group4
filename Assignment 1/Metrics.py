@@ -1,18 +1,27 @@
+import matplotlib.pyplot as plt
+
 class Metrics:
-    def __init__():
-        errLabelObj = plt.gcf()
-        errLabelText = [errLabelObj.text(0.15, 0.75, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.80, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.85, "Placeholder ", ha="left", va="top"),
-                errLabelObj.text(0.15, 0.90, "Placeholder ", ha="left", va="top")]
-        #explaination label
-        plt.gcf().text(0.15,0.95,"Current error [m] | accumulated error [m] | average error per iteration [m/iter]", ha="left", va="top")
-    
-    def update():
+    numberOfAgents = 4
+    errLabelObj = plt.gcf()
+    errLabelText = [None] * numberOfAgents
+    for i in range(numberOfAgents):
+        errLabelText[i] = errLabelObj.text(0.15, 0.90-0.05*i, "Placeholder ", ha="left", va="top")
+    #explaination label
+    plt.gcf().text(0.15,0.95,"Current error [m] | accumulated error [m] | average error per iteration [m/iter]", ha="left", va="top")
+
+    def __init__(self, circle_radius):
+        self.accDistance = [0] * self.numberOfAgents
+        self.iterations = [1] * self.numberOfAgents
+        self.circle_radius = circle_radius
+        self.distance = [0] * self.numberOfAgents
+    def setCircleRadius(self, radius):
+        self.circle_radius = radius
+    def update(self, robotid, distance):
         #printing error
-        accDistance += abs(distance_float - circle_radius)
-        iterations += 1    
-    def print(robotid):
+        self.distance[robotid] = distance
+        self.accDistance[robotid] += abs(distance - self.circle_radius)
+        self.iterations[robotid] += 1    
+    def print(self,robotid):
         #printing error
-        errLabelText[robotid].set_text(f" {abs(distance - circle_radius)}  ||  {round(accDistance, 2)}  ||  {round(accDistance/iterations, 2)}")
+        self.errLabelText[robotid].set_text(f" {round(abs(self.distance[robotid] - self.circle_radius),2)}  ||  {round(self.accDistance[robotid], 2)}  ||  {round(self.accDistance[robotid]/self.iterations[robotid], 2)}")
 
