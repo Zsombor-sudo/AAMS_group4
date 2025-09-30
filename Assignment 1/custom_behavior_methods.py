@@ -135,7 +135,7 @@ def RL_circle(
     if not file_path.exists():
         # q_table = np.zeros([500, 314]) # 500 states (distance to center in 0.1 increments) and 314 actions (angle to center between 0 and 3.14 in 0.01 increments)
         # q_table = np.zeros([500, 2]) # 500 states (distance to center in 0.1 increments) and 2 actions (going away from center and opposite)
-        q_table = np.zeros([500, 10]) # 500 states (distance to center in 0.1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
+        q_table = np.zeros([500, 10]) # 500 states (distance to center in 0.1 increments) and 10 actions (angle to center between 0.785 and 2.355 in 0.157 increments)
         # q_table = np.zeros([50, 10]) # 50 states (distance to center in 1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
     else: # Otherwise load the Q table:
         q_table = np.loadtxt(file_path, delimiter=',')
@@ -167,7 +167,7 @@ def RL_circle(
         if distance < circle_radius:
             reward = 2*(distance - circle_radius)
         if distance == circle_radius:
-            reward = 10
+            reward = 0
 
 
         old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
@@ -190,11 +190,11 @@ def RL_circle(
 
     ## Set next step:
     # Calculate angular:
-    radian += (action / q_table.shape[1]) * np.pi
+    radian += (action / q_table.shape[1]) * np.pi/2 + np.pi/4
     diff_radian = WrapToPi(radian - state[2, 0])
     # angular = max_vel[1, 0] * np.sign(diff_radian)
     # angular = np.clip(1 * diff_radian, -max_vel[1, 0], max_vel[1, 0])
-    angular = max_vel[1, 0] * np.tanh(0.5 * diff_radian)
+    angular = max_vel[1, 0] * np.tanh(1 * diff_radian)
 
     # Always move forward at a set speed
     # linear = max_vel[0, 0] * np.cos(diff_radian)
