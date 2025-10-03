@@ -1,5 +1,9 @@
 # main.py
-import os, argparse, numpy as np, irsim
+import argparse
+import os
+
+import irsim
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train","eval"], default="train")
@@ -19,7 +23,7 @@ else:
     os.environ["IRSIM_TRAIN"] = "1"
     NUM_EPISODES, STEPS_PER_EP = args.episodes, args.steps
 
-np.random.seed(42)
+# np.random.seed(42)
 
 env = irsim.make(save_ani=False, full=False, world_name="robot_world.yaml")
 env.load_behavior("custom_behavior")
@@ -27,7 +31,15 @@ env.load_behavior("custom_behavior")
 for ep in range(NUM_EPISODES):
     try:
         env.reset()
+        for i, robot in enumerate(env.robot_list):
+            robot.set_goal([[5, 5, 0]])
+            x, y = robot.state[0,0], robot.state[1,0]
+            # Make the robot face tangent to the center of the circle
+            robot.state[2,0] = np.arctan2(5 - y, 5 - x) + np.pi / 2 + np.pi
+            # print(f"Robot {i} starting at ({x:.2f}, {y:.2f}, {robot.state[2,0]:.2f})")
+        env.reset_plot()    
     except Exception:
+        print("Reset failed, retrying...")
         env = irsim.make(save_ani=False, full=False, world_name="robot_world.yaml")
         env.load_behavior("custom_behavior")
 
