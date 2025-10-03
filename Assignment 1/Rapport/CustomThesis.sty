@@ -38,15 +38,92 @@
 \usepackage{eso-pic}    % Add background material (for title page, watermark, etc.)
 
 % --- Code listings ---
+% Packages:
 \usepackage{minted} % Code highlighting via Pygments (requires -shell-escape)
-\usemintedstyle{manni} % Default minted style
-% Example custom settings:
-\setminted[cpp]{fontsize=\small, linenos}
-\setminted[python]{fontsize=\small, linenos, bgcolor=LightGray}
-\setminted[c]{fontsize=\small, linenos, bgcolor=LightGray}
-\setminted[matlab]{fontsize=\small, linenos, bgcolor=LightGray}
-\renewcommand{\theFancyVerbLine}{\color{DarkGray}\small\ttfamily{\arabic{FancyVerbLine}}} % Line number style
-\newenvironment{code}{\captionsetup{type=figure}}{} % Treat code blocks like figures
+\usepackage{listings}
+\usepackage{chngcntr}
+\usepackage{fancyvrb}
+
+% Color palette
+\definecolor{CodeBackground}{RGB}{248, 248, 248} % Dark background
+\definecolor{CodeText}{RGB}{30,30,30}       % Default text
+\definecolor{CodeKeyword}{RGB}{86,156,214}    % Blue
+\definecolor{CodeComment}{RGB}{106,153,85}    % Green for comments
+\definecolor{CodeString}{RGB}{206,145,120}     % Orange/red for strings
+\definecolor{CodeFunction}{RGB}{220,220,170}   % Yellow for function names
+\definecolor{CodeLineNumber}{RGB}{140,140,140}   % Dark gray for line numbers
+
+% Minted setup:
+% % Set default minted style:
+% \usemintedstyle{default} % Decent
+% % \usemintedstyle{friendly} % Decent
+% % \usemintedstyle{emacs} % Decent
+% % \usemintedstyle{perldoc} % Decent
+% % \usemintedstyle{vs} % Eh
+% % \usemintedstyle{manni} % Eh
+% % \usemintedstyle{borland} % Eh
+% % \usemintedstyle{trac} % Eh
+% % \usemintedstyle{bw} % Eh
+
+% % Custom settings:
+% \setminted{
+%   fontsize=\small, 
+%   linenos, 
+%   bgcolor=CodeBackground,
+%   numbersep=5pt,
+%   breaklines=true,
+%   % frame=single,
+%   frame=lines,
+%   framesep=1.5mm,
+%   framerule=0.7pt,
+%   rulecolor=\color{CodeText},
+% }
+% \renewcommand{\theFancyVerbLine}{\color{CodeLineNumber}\small\ttfamily{\arabic{FancyVerbLine}}} % Line number style
+
+% % Create new "figure" type called listing
+% \newfloat{listing}{htbp}{lop}
+% \floatname{listing}{Listing}
+% \counterwithin{listing}{section}
+
+% % CodeBlock wrapper:
+% \newenvironment{codeblock}[3]{%
+%   \def\codeCaption{#2}%
+%   \def\codeLabel{#3}%
+
+%   \VerbatimEnvironment%
+%   \begin{listing}[ht]%
+%   \begin{minted}{#1}%
+% }{%
+%   \end{minted}%
+%   \caption{\codeCaption}%
+%   \label{\codeLabel}%
+%   \end{listing}%
+% }
+
+% Listings setup:
+% General settings
+\lstset{
+    basicstyle=\ttfamily\small\color{CodeText},   % Small monospace font
+    keywordstyle=\color{CodeKeyword}\bfseries,
+    commentstyle=\color{CodeComment}\itshape,
+    stringstyle=\color{CodeString},
+    identifierstyle=\color{CodeText},
+    moredelim=[is][\color{CodeFunction}]{@}{@}, % Use @func@ to highlight function calls
+    numbers=left,                 % Line numbers on the left
+    numberstyle=\color{CodeLineNumber}\small\ttfamily, % Line number style
+    numbersep=5pt,                % Space between numbers and code
+    stepnumber=1,
+    backgroundcolor=\color{CodeBackground}, % Default background
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black},
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b,
+}
+
+% CodeBlock wrapper:
+\lstnewenvironment{codeblock}[3]{\lstset{language=#1, caption={#2}, label={#3}}}{}
 
 % --- Math support ---
 \usepackage{mathtools} % Extensions to amsmath

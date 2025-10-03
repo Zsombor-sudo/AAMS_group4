@@ -13,6 +13,7 @@
 % Rapport starts here
 % ----------------------------------------------------------------------------------------
 \begin{document}
+\counterwithin{lstlisting}{section} % This has to be after the \begin{document} command and can't be in the preamble for some reason
 %TC:ignore
 
 \pagenumbering{gobble} %ingen sidenumre
@@ -51,9 +52,9 @@
 % \renewcommand{\headrule}{{\color{StyleColorDark}\hrule width\headwidth height\headrulewidth}}  % Apply color to the top rule
 % \setlength{\headheight}{24pt}
 
-% \section*{Bibliografi}
-% \addcontentsline{toc}{section}{Bibliografi}
-% \printbibliography[title={\large Hjemmesider}, type={online}]
+\section*{Bibliography}
+\addcontentsline{toc}{section}{Bibliography}
+\printbibliography[title={\large Websites}, type={online}]
 % \printbibliography[title={\large Bøger}, type={book}]
 % \printbibliography[title={\large Datablade}, type={datasheet}]
 % \printbibliography[title={\large Øvrige}, type={misc}]

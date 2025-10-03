@@ -7,7 +7,48 @@
 
 
 \subsection{Hard-coded solution}
+To get familiar with the IR-Sim library, we first hard-coded a robot to move in a circle. To do this we first found the source code for the \textit{Dash} behaviour when using \textit{Diff} kinematics\parencite{website:DiffDash}. This basic behaviour simply makes the agent move directly towards the goal, slowing down to turn if necessary. It does so by calculating the difference in the angle of the agent and the angle between the agent and the goal, which is the angle the agent should have to move towards the goal, and the agent then simply turns to reduce this difference to zero.
 
+To make the agent instead move along a circle, we simply add 90 degrees to the angle between the agent and the goal. This makes the agent move along the circle tangent and assuming infinetly small steps, this would result in a perfect circle. However since we don't have infinetly small steps, the agent will move further and further away from the circle with each step. To account for this, we simply take the distance from the circle center and add this to the equation, increasing the angle when the distance is less than the desired radius and decreasing the angle when the distance is more than the desired radius. This results in the code seen in listing \ref{code:90Degrees}.
+
+% \begin{figure}[ht]
+%     \begin{minted}{python}
+% # Get the distance and the angle to the goal (Circle center):
+% distance, radian = relative_position(state, goal)
+
+% # Calculate the distance correction amount:
+% distanceCorrection = (circle_radius - distance) * correction_multiplier
+
+% # Add 90 degress + the distance correction to the angle between the agent and the goal
+% radian += np.pi/2 + distanceCorrection
+%     \end{minted}
+% \caption{Implementation of getting the desired angle for the agent}
+% \label{code:90Degrees}
+% \end{figure}
+
+% \begin{lstlisting}[language=Python, 
+%     caption={Implementation of getting the desired angle for the agent},
+%     label={code:90Degrees}]
+% # Get the distance and the angle to the goal (Circle center):
+% distance, radian = relative_position(state, goal)
+
+% # Calculate the distance correction amount:
+% distanceCorrection = (circle_radius - distance) * correction_multiplier
+
+% # Add 90 degress + the distance correction to the angle between the agent and the goal
+% radian += np.pi/2 + distanceCorrection
+% \end{lstlisting}
+
+\begin{codeblock}{python}{Implementation of getting the desired angle for the agent}{code:90Degrees}
+# Get the distance and the angle to the goal (Circle center):
+distance, radian = relative_position(state, goal)
+
+# Calculate the distance correction amount:
+distanceCorrection = (circle_radius - distance) * correction_multiplier
+
+# Add 90 degress + the distance correction to the angle between the agent and the goal
+radian += np.pi/2 + distanceCorrection
+\end{codeblock}
 
 \subsection{RL-learning}
 

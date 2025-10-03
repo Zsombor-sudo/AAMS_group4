@@ -6,6 +6,8 @@
 \RequirePackage{iftex}    % Detect LaTeX engine
 \RequirePackage[a4paper, total={6.5in, 9in}]{geometry}
 
+\setlength{\parindent}{0pt} % Set the paragraph indent
+
 \RequirePackage{fancyhdr} % To make fancy headers
 \pagestyle{fancy}
 
@@ -77,7 +79,10 @@
     \RequirePackage[utf8]{inputenc}
     \RequirePackage{lmodern}
     \RequirePackage[scaled]{helvet}
-    \RequirePackage{inconsolata}
+    \RequirePackage[scaled]{beramono} % Bera Mono font, close to JetBrains Mono
+    % \RequirePackage[scaled]{DejaVuSansMono}
+    % \RequirePackage[scaled]{FiraMono} % Maybe not portable
+
 
     \newcommand{\StyleFontBold}{\sffamily\bfseries}
     \newcommand{\StyleFontRegular}{\sffamily}
@@ -119,7 +124,7 @@
         \RequirePackage[utf8]{inputenc}
         \RequirePackage{lmodern}
         \RequirePackage[scaled]{helvet}
-        \RequirePackage{inconsolata}
+        \RequirePackage[scaled]{beramono} % Bera Mono font, close to JetBrains Mono
 
         % Define AU font replacements
         \newcommand{\StyleFontBold}{\sffamily\bfseries}
@@ -208,6 +213,12 @@
 \counterwithin{equation}{section}
 \counterwithin{figure}{section}
 \counterwithin{table}{section}
+
+% Add for code blocks:
+% \RequirePackage{float}
+% \newfloat{code}{htbp}{lop}
+% \floatname{code}{Code Block}
+% \counterwithin{code}{section}
 
 % Load preamble
 \RequirePackage{CustomThesis}
