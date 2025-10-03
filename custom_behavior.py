@@ -191,7 +191,8 @@ def beh_docircle_collision_avoid(ego_object, **kwargs) -> np.ndarray:
     # Action selection
     epsilon_now = EPSILON if TRAINING else EVAL_EPS
     the_chosen = pick_action(Q_TABLE_ENHANCED[s_idx], epsilon=epsilon_now)
-    
+
+    # print(f"Epsilon: {epsilon_now}, Action chosen: {the_chosen}, Q-values: {Q_TABLE_ENHANCED[s_idx]}")
     v_cmd, w_cmd = actions[the_chosen]
     v_cmd = float(np.clip(v_cmd, min_v, max_v))
     w_cmd = float(np.clip(w_cmd, min_w, max_w))
