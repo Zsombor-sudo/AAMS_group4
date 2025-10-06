@@ -7,23 +7,28 @@
 
 
 \subsection{Hard-coded solution}
-To get familiar with the IR-Sim library, we first hard-coded a robot to move in a circle. To do this we first found the source code for the \textit{Dash} behaviour when using \textit{Diff} kinematics\parencite{website:DiffDash}. This basic behaviour simply makes the agent move directly towards the goal, slowing down to turn if necessary. It does so by calculating the difference in the angle of the agent and the angle between the agent and the goal, which is the angle the agent should have to move towards the goal, and the agent then simply turns to reduce this difference to zero.
+To get familiar with the IR-Sim library, we first hard-coded a robot to move in a circle. To do this we first found the source code for the \textit{Dash} behaviour when using \textit{Diff} kinematics\parencite{website:DiffDash}. This basic behaviour simply makes the agent move directly towards the goal, slowing down to turn if necessary. Since the agent wants to move directly towards the goal, the desired angle of the agent should be equal to the angle between the goal and the agent. So the DiffDash behaviour starts by getting the angle of the agent and the desired angle (the angle between the agent and the goal). The difference between these angles is calculated and then the agent simply turns to reduce this difference to zero, making it's angle equal to the desired angle.
 
-To make the agent instead move along a circle, we simply add 90 degrees to the angle between the agent and the goal. This makes the agent move along the circle tangent and assuming infinetly small steps, this would result in a perfect circle. However since we don't have infinetly small steps, the agent will move further and further away from the circle with each step. To account for this, we simply take the distance from the circle center and add this to the equation, increasing the angle when the distance is less than the desired radius and decreasing the angle when the distance is more than the desired radius. This results in the code seen in listing \ref{code:90Degrees}.
+\newPara
 
-\begin{codeblock}{python}{Implementation of getting the desired angle for the agent}{code:90Degrees}
+To make the agent instead move along a circle, we simply add 90 degrees to the desired angle. This makes the agent move along the circle tangent and assuming infinetly small steps, this would result in a perfect circle. However since we don't have infinetly small steps, the agent will move further and further away from the circle with each step. To account for this, we simply take the distance from the circle center and add this to the equation, increasing the angle when the distance is less than the desired radius and decreasing the angle when the distance is more than the desired radius. This results in the code seen in listing \ref{code:90Degrees}.
+
+\begin{codeblock}{python}{Implementation of getting the desired angle for the circle following agent}{code:90Degrees}
 # Get the distance and the angle to the goal (Circle center):
 distance, radian = relative_position(state, goal)
 
 # Calculate the distance correction amount:
 distanceCorrection = (circle_radius - distance) * correction_multiplier
 
-# Add 90 degress + the distance correction to the angle between the agent and the goal
+# Add 90 degress + the distance correction to the desired angle
 radian += np.pi/2 + distanceCorrection
+
+# Calculate the difference between the agents angle and the desired angle
+diff_radian = WrapToPi(radian - state[2, 0])
 \end{codeblock}
 
-\subsection{RL-learning}
-
+\subsection{Reinforcement Learning}
+Having gotten a deeper understanding of the IR-Sim library, we started implementing the circle following behaviour using reinforcement learning. In our group we implemented RL in 3 slightly different ways, which allows us to later compare the different solutions, including the hard-coded solution, and determine which is the best for creating circle following agents.
 
 \subsubsection{Alba}
 

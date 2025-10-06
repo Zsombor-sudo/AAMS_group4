@@ -2,5 +2,30 @@
 
 \clearpage
 
+\section{Testing methodology}
+\label{sec:test}
+To measure the quality of our solutions, we measure based on the following metrics:
+
+\begin{enumerate}
+    \item \textbf{Radius Error}: Every simulated step, we add the current distance between the agent and the desired circle radius, adding together the error of all the agents to get one value per solution. A lower value would equal the agent having spent more time closer to the circle it is meant to follow. 
+    \item \textbf{Angle Error}: Every simulated step, we add the amount the desired angle for the agent has changed, adding together the error of all the agents to get one value per solution. While following a circle, the angle should stay almost constant, so a lower value would equal the agent having followed a smooth path.
+    \item \textbf{Speed}: The amount of time the agents on average spend doing one lap around the circle. A higher speed is better.
+\end{enumerate}
+    
+And to measure the quality of the solutions using the subsumption architecture, we also add the following metrics:
+
+\begin{enumerate}[resume]
+    \item \textbf{Collisions}: The amount of agents that collide.
+\end{enumerate}
+
 \section{Results}
 \label{sec:results}
+First we will go through every metric, showing a graph of how the different solutions compare on the specific metric throughout the simulation time. In section \sectionRef{sec:discussion} we will collect the results in table \ref{tab:resultTable} and discuss our findings. 
+
+\subsection{Radius Error}
+
+\subsection{Angle Error}
+
+\subsection{Speed}
+
+\subsection{Collisions}

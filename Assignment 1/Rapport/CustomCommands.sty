@@ -48,7 +48,7 @@
 \newcommand{\wordTotal}[1]{\numexpr \quickcharcount{#1} + \quickwordcount{#1}} \relax
 
 % \newcommand{\ewoudref}[1]{\hyperref[#1]{\ref*{#1} ``\nameref*{#1}''}}         % Version med anførelses tegn
-\newcommand{\ewoudref}[1]{\hyperref[#1]{\ref*{#1} \textit{\nameref*{#1}}}}      % Version med skråskrift
+\newcommand{\sectionRef}[1]{\hyperref[#1]{\ref*{#1} \textit{\nameref*{#1}}}}      % Version med skråskrift
 
 \newenvironment{enumlist}%
   {\begin{enumerate}%
