@@ -1,0 +1,72 @@
+\setcounter{secnumdepth}{4}
+
+\clearpage
+
+\section{Implementation}
+\label{sec:implementation}
+
+
+\subsection{Hard-coded solution}
+To get familiar with the IR-Sim library, we first hard-coded a robot to move in a circle. To do this we first found the source code for the \textit{Dash} behaviour when using \textit{Diff} kinematics\parencite{website:DiffDash}. This basic behaviour simply makes the agent move directly towards the goal, slowing down to turn if necessary. It does so by calculating the difference in the angle of the agent and the angle between the agent and the goal, which is the angle the agent should have to move towards the goal, and the agent then simply turns to reduce this difference to zero.
+
+To make the agent instead move along a circle, we simply add 90 degrees to the angle between the agent and the goal. This makes the agent move along the circle tangent and assuming infinetly small steps, this would result in a perfect circle. However since we don't have infinetly small steps, the agent will move further and further away from the circle with each step. To account for this, we simply take the distance from the circle center and add this to the equation, increasing the angle when the distance is less than the desired radius and decreasing the angle when the distance is more than the desired radius. This results in the code seen in listing \ref{code:90Degrees}.
+
+\begin{codeblock}{python}{Implementation of getting the desired angle for the agent}{code:90Degrees}
+# Get the distance and the angle to the goal (Circle center):
+distance, radian = relative_position(state, goal)
+
+# Calculate the distance correction amount:
+distanceCorrection = (circle_radius - distance) * correction_multiplier
+
+# Add 90 degress + the distance correction to the angle between the agent and the goal
+radian += np.pi/2 + distanceCorrection
+\end{codeblock}
+
+\subsection{RL-learning}
+
+
+\subsubsection{Alba}
+
+
+\subsubsection{Q-learning with an external table and error-shaped reward}
+This solution uses predefined actions and a discretized state space to learn an external Q-table across multiple episodes. The current state is obtained by binning two errors computed from the robot’s pose $(x,y,\theta)$ relative to the goal: the radial error $e_r = d - R_{\text{target}}$ and the heading error $e_\psi = \mathrm{WrapToPi}(\psi - \theta)$, where $\psi = \phi + \pi/2$ is the desired tangential heading for circular motion. We discretize $(e_r,e_\psi)$ into a $3\times3$ grid using:
+\begin{itemize}
+  \item Radius bins: $(-\infty,-0.2],\;[-0.2,0.2],\;[0.2,\infty)$ (inside / on / outside).
+  \item Angle bins: $(-\pi,-\pi/4],\;[-\pi/4,\pi/4],\;[\pi/4,\pi)$ (left / aligned / right).
+\end{itemize}
+
+\noindent\textbf{Actions.} The controller uses four action primitives that set the robot’s linear and angular velocities $(v,\omega)$ from the platform limits $(v_{\max},\omega_{\max})$: “fast” is $0.8\,v_{\max}$, “slow” is $0.4\,v_{\max}$, and turns use $0.8\,\omega_{\max}$. The actions are:
+\begin{itemize}
+  \item fast forward + turn left,
+  \item fast forward (straight),
+  \item fast forward + turn right,
+  \item slow forward (straight).
+\end{itemize}
+
+\noindent\textbf{Learning.} We use tabular Q-learning with learning rate $\alpha=0.5$, discount $\gamma=0.9$, and $\varepsilon$-greedy exploration with $\varepsilon=0.2$. After each transition $(s,a,r,s')$ the update is
+\[
+  Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma \max_{a'} Q(s',a') - Q(s,a)\bigr].
+\]
+
+\noindent\textbf{Reward shaping.} The reward penalizes radial and heading errors while rewarding forward progress along the orbit:
+\[
+  r \;=\; -\alpha_r |e_r| \;-\; \alpha_\psi |e_\psi| \;+\; w_t\, v \cos(e_\psi),
+\]
+with $\alpha_r=2.0$, $\alpha_\psi=1.0$, and $w_t=0.4$ (see \ref{code:shapedReward}).
+
+\begin{codeblock}{python}{Shaped reward function}{code:shapedReward}
+def shaped_reward(e_r: float, e_psi: float, v_cmd: float) -> float:
+    alpha = 2.0    # weight radial error
+    beta  = 1.0    # weight heading error
+    tan   = 0.4    # weight tangential progress
+    return float(-alpha * abs(e_r) - beta * abs(e_psi) + tan * (v_cmd * math.cos(e_psi)))
+\end{codeblock}
+
+\noindent\textbf{Persistence.} The Q-table is stored in a CSV file so training progress persists across runs and can be resumed across episodes.
+
+
+
+\subsubsection{Wouter Jonathan}
+
+
+\subsection{Subsumption Architecture and Obstacle Avoidance}
