@@ -4,6 +4,9 @@ import numpy as np
 from pathlib import Path
 import random
 import math
+from Metrics import Metrics
+#default radius on 1
+metrics = Metrics(1)
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -125,6 +128,7 @@ def RL_circle(
     ### Source: ###
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
 
+    metrics.setCircleRadius(circle_radius)
     ## Load tables:
     file_path = Path('q_table.csv') # When executing the file while in the Assignemnt 1 folder
     # file_path = Path('Assignment 1/q_table.csv') # When executing the file while in the Assignemnt 1 parent folder
@@ -147,6 +151,7 @@ def RL_circle(
     # In my RL environment the distance is the state
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
+    distance_float = distance
     distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
     # distance = int(round(distance)) # Round the distance to nearest integer to get the current state
     
@@ -204,4 +209,9 @@ def RL_circle(
     # linear = max_vel[0, 0] * np.cos(diff_radian)
     linear = max_vel[0, 0] * (np.cos(diff_radian) + 1) / 2  
 
+    
+    metrics.update(agent_id, distance_float)
+    metrics.updateSpeed(agent_id, linear)
+    metrics.updateAngular(agent_id, angular)
+    metrics.print(agent_id)
     return np.array([[linear], [angular]]) 

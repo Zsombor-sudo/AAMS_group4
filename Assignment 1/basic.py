@@ -21,7 +21,7 @@ for i in range(1):
     env = irsim.make(save_ani=False, full=False, display=True)
     env.load_behavior("custom_behavior_methods")
 
-    for _i in range(500):
+    for _i in range(1000):
         env.step()
         env.render(0.01)
 
