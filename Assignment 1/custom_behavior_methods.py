@@ -93,13 +93,12 @@ def beh_diff_dash(
 
     state = ego_object.state
     goal = ego_object.goal
-    goal_threshold = ego_object.goal_threshold
     _, max_vel = ego_object.get_vel_range()
-    angle_tolerance = kwargs.get("angle_tolerance", 0.1)
     circle_radius = kwargs.get("circle_radius", 5)
     alpha = kwargs.get("alpha", 0.1) # Learning rate
     gamma = kwargs.get("gamma", 0.6) # Discount factor
     epsilon = kwargs.get("epsilon", 0.1) # Exploration/Exploitation trade off
+    agent_id = ego_object.id
 
     if goal is None:
         if world_param.count % 10 == 0:
@@ -109,19 +108,18 @@ def beh_diff_dash(
 
         return np.zeros((2, 1))
 
-    return RL_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, alpha, gamma, epsilon)
+    return RL_circle(state, goal, max_vel, circle_radius, alpha, gamma, epsilon, agent_id)
 
 
 def RL_circle(
     state: np.ndarray,
     goal: np.ndarray,
     max_vel: np.ndarray,
-    goal_threshold: float = 0.1,
-    angle_tolerance: float = 0.2,
     circle_radius: float = 5,
     alpha: float = 0.1,
     gamma: float = 0.6,
     epsilon: float = 0.1,
+    agent_id: int = 10,
 ) -> np.ndarray:
 
     ### Source: ###
@@ -140,19 +138,21 @@ def RL_circle(
     else: # Otherwise load the Q table:
         q_table = np.loadtxt(file_path, delimiter=',')
 
+    ## Old values table:
+    if not hasattr(RL_circle, "old_values"):
+        RL_circle.old_values = np.zeros([10, 2], dtype=int)
+
     ## Training:
     # In my RL environment the distance is the state
     
     distance, radian = relative_position(state, goal) # Get distance and angle to circle center
     distance = int(round(distance, 1) * 10) # Round the distance to nearest single decimal and multiply by 10 to get the current state
     # distance = int(round(distance)) # Round the distance to nearest integer to get the current state
-
-    print(distance)
     
-    # If first step, don't calculate Q value
-    if not hasattr(RL_circle, "old_distance"):
-        RL_circle.old_distance = distance
-    else: # Calculate new Q value:
+    # print(distance)
+
+    # Calculate new Q value:
+    if (RL_circle.old_values[agent_id, 0] != 0):
         ### Tip: Try to use https://www.geogebra.org/classic?lang=en to visualise the reward curve
         # reward = -abs(circle_radius*10 - distance) * 100
         # reward = -abs(circle_radius - distance) * 100
@@ -169,12 +169,11 @@ def RL_circle(
         if distance == circle_radius:
             reward = 0
 
-
-        old_value = q_table[RL_circle.old_distance, RL_circle.old_action]
+        old_value = q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]]
         next_max = np.max(q_table[distance])
 
         new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
-        q_table[RL_circle.old_distance, RL_circle.old_action] = new_value
+        q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]] = new_value
         
         # Save the Q table:
         np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
@@ -185,8 +184,8 @@ def RL_circle(
     else:
         action = np.argmax(q_table[distance]) # Exploit learned values
 
-    RL_circle.old_action = int(action)
-    RL_circle.old_distance = distance
+    RL_circle.old_values[agent_id, 0] = distance
+    RL_circle.old_values[agent_id, 1] = int(action)
 
     ## Set next step:
     # Calculate angular:

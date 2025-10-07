@@ -10,7 +10,7 @@ world:
 
 
 robot:
-  - number: 1
+  - number: 10
     # distribution: {name: 'circle', radius: 4.0, center: [10, 10]}
     distribution: {name: 'manual'}
     kinematics: {name: 'diff'}
@@ -19,7 +19,16 @@ robot:
     # behavior: {name: 'rvo', vxmax: 1.0, vymax: 1.0, acce: 1.0, factor: 2.0, neighbor_threshold: 5.0}
     behavior: {name: 'RL_circle', circle_radius: 10, epsilon: 0.1}
     # behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
-    state: [[5, 15, 1.57],[25, 15, -1.57],[15, 5, 3.14],[15, 25, 0]]
+    state: [[25.000000, 15.000000, -1.570796],
+            [23.090170, 20.877853, -0.942478],
+            [18.090170, 24.510565, -0.314159],
+            [11.909830, 24.510565, 0.314159],
+            [6.909830, 20.877853, 0.942478],
+            [5.000000, 15.000000, 1.570796],
+            [6.909830, 9.122147, 2.199115],
+            [11.909830, 5.489435, 2.827433],
+            [18.090170, 5.489435, -2.827433],
+            [23.090170, 9.122147, -2.199115]]
     goal: [[15, 15, 0]]
     vel_min: [-3, -3.0]
     vel_max: [3, 3.0]
@@ -33,6 +42,7 @@ robot:
       trail_alpha: 0.2
       show_trajectory: false
       keep_trail_length: 15
+    unobstructed: True
 
 obstacle:
   - shape: {name: 'circle', radius: 10.0}  # radius
