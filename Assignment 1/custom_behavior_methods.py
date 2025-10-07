@@ -218,4 +218,6 @@ def RL_circle(
     # Always move forward at a set speed
     linear = max_vel[0, 0]
 
+    metrics.updateSpeed(robotid, linear)
+    metrics.updateAngular(robotid, angular)
     return np.array([[linear], [angular]]) 

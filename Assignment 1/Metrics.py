@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import csv
 
 class Metrics:
@@ -15,18 +16,33 @@ class Metrics:
         self.iterations = [1] * self.numberOfAgents
         self.circle_radius = circle_radius
         self.distance = [0] * self.numberOfAgents
+        self.speed = [0] * self.numberOfAgents
+        self.angular = [0] * self.numberOfAgents
 
         #open the csv file to save measurements
-        self.f = open("Assignment 1/errors.csv", "a", newline="")
-        self.writer = csv.writer(self.f)
+        self.fRad = open("Assignment 1/RadiusErrors.csv", "a", newline="")
+        self.fAng = open("Assignment 1/AngleErrors.csv", "a", newline="")
+        self.fSpeed = open("Assignment 1/Speed.csv", "a", newline="")
+
+        self.writerRad = csv.writer(self.fRad)
+        self.writerAng = csv.writer(self.fAng)
+        self.writerSpeed = csv.writer(self.fSpeed)
         
     def setCircleRadius(self, radius):
         self.circle_radius = radius
+        
     def update(self, robotid, distance):
         #printing error
         self.distance[robotid] = distance
         self.accDistance[robotid] += abs(distance - self.circle_radius)
         self.iterations[robotid] += 1
+    
+    def updateSpeed(self, robotid, speed):
+        self.speed[robotid] = speed
+    
+    def updateAngular(self, robotid, angular):
+        self.angular[robotid] = angular
+
         
 
     def print(self,robotid):
@@ -34,6 +50,14 @@ class Metrics:
         self.errLabelText[robotid].set_text(f" {round(abs(self.distance[robotid] - self.circle_radius),2)}  ||  {round(self.accDistance[robotid], 2)}  ||  {round(self.accDistance[robotid]/self.iterations[robotid], 2)}")
 
         #save to file
-        self.writer.writerow(round(abs(dist - self.circle_radius),2) for dist in self.distance)
-        self.f.flush()
+        self.writerRad.writerow(round(abs(dist - self.circle_radius),2) for dist in self.distance)
+        self.fRad.flush()
+
+        #angular
+        self.writerAng.writerow(round(abs(angular - np.pi/2),2) for angular in self.angular)
+        self.fAng.flush()
+
+        #speed
+        self.writerSpeed.writerow(round(abs(speed),2) for speed in self.speed)
+        self.fSpeed.flush()
 
