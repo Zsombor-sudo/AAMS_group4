@@ -35,7 +35,7 @@ for ep in range(NUM_EPISODES):
             robot.set_goal([[5, 5, 0]])
             x, y = robot.state[0,0], robot.state[1,0]
             # Make the robot face tangent to the center of the circle
-            robot.state[2,0] = np.arctan2(5 - y, 5 - x) + np.pi / 2 + np.pi
+            robot.state[2,0] = np.arctan2(5 - y, 5 - x) + np.pi / 2
             # print(f"Robot {i} starting at ({x:.2f}, {y:.2f}, {robot.state[2,0]:.2f})")
         env.reset_plot()    
     except Exception:
