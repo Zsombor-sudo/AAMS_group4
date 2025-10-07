@@ -1,12 +1,16 @@
 import math
-from typing import Dict, List, Tuple, Optional
+from typing import Tuple
 import os
 import numpy as np
 from irsim.lib import register_behavior
 from irsim.util.util import relative_position, WrapToPi
+from Metrics import Metrics
+
+metrics = Metrics(1)
 
 R_TARGET: float = 3.0
 S_DIR: int = +1
+R_OBS: int = 1
 
 ALPHA: float = 0.5
 GAMMA: float = 0.9
@@ -65,12 +69,12 @@ def state_index_from(state_col: np.ndarray, goal_col: np.ndarray) -> Tuple[float
 
     i_r   = int(np.digitize([e_r],   R_BINS)[0] - 1)
     i_ang = int(np.digitize([e_psi], ANG_BINS)[0] - 1)
-    s_idx = i_r * 3 + i_ang  # 0..8
+    s_idx = i_r * 3 + i_ang 
     return e_r, e_psi, s_idx
 
 
 def shaped_reward(e_r: float, e_psi: float, v_cmd: float) -> float:
-    alpha = 2.0    # weight radial errot
+    alpha = 2.0    # weight radial error
     beta  = 1.0    # w heading error
     tan  = 0.4    # w tangential(?)
     return float(-alpha * abs(e_r) - beta * abs(e_psi) + tan * (v_cmd * math.cos(e_psi)))
@@ -79,7 +83,8 @@ def shaped_reward(e_r: float, e_psi: float, v_cmd: float) -> float:
 def beh_docircle(ego_object, **kwargs) -> np.ndarray:
     global _LAST, Q_TABLE
 
-    state_col = ego_object.state              
+    state_col = ego_object.state
+    robotid = ego_object.id              
     goal_col  = ego_object.goal  
 
     min_vel_col, max_vel_col = ego_object.get_vel_range()  
@@ -104,15 +109,36 @@ def beh_docircle(ego_object, **kwargs) -> np.ndarray:
         td_target = r + GAMMA * float(np.max(Q_TABLE[s_idx]))
         td_error  = td_target - Q_TABLE[s_prev, a_prev]
         Q_TABLE[s_prev, a_prev] += ALPHA * td_error
+        
+        metrics.update(robotid, distance=e_r + R_TARGET)
 
+        metrics.updateSpeed(robotid, v_cmd)
+
+        metrics.updateAngular(robotid, e_psi)
+        
+        metrics.print(robotid)
         save_q_table(Q_TABLE, Q_CSV_PATH)
 
+        
     epsilon_now = EPSILON if TRAINING else EVAL_EPS
-    the_chosen = pick_action(Q_TABLE[s_idx], epsilon=epsilon_now)
-
+    the_chosen = pick_action(Q_TABLE[s_idx], epsilon=epsilon_now)        
+        
     v_cmd, w_cmd = actions[the_chosen]
     v_cmd = float(np.clip(v_cmd, min_v, max_v))
     w_cmd = float(np.clip(w_cmd, min_w, max_w))
 
+    metrics.update(robotid, distance=e_r + R_TARGET)
+    metrics.updateSpeed(robotid, v_cmd)
+    metrics.updateAngular(robotid, e_psi)
+    metrics.print(robotid)
+
     ego_object._docircle_last = {"s": s_idx, "a": the_chosen, "er": e_r, "epsi": e_psi, "v": v_cmd}
     return np.array([[v_cmd], [w_cmd]], dtype=float)
+    
+
+
+
+
+
+
+    
