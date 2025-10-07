@@ -49,6 +49,10 @@ class Metrics:
         #printing error
         self.errLabelText[robotid].set_text(f" {round(abs(self.distance[robotid] - self.circle_radius),2)}  ||  {round(self.accDistance[robotid], 2)}  ||  {round(self.accDistance[robotid]/self.iterations[robotid], 2)}")
 
+        #condition if all agents are on same iteration, then save record
+        if not len(set(self.iterations)) == 1:
+            return
+
         #save to file
         self.writerRad.writerow(round(abs(dist - self.circle_radius),2) for dist in self.distance)
         self.fRad.flush()
