@@ -21,7 +21,7 @@ class Metrics:
 
         #open the csv file to save measurements
         self.fRad = open("RadiusErrors.csv", "a", newline="")
-        self.fAng = open("AngleErrors.csv", "a", newline="")
+        self.fAng = open("Angle.csv", "a", newline="")
         self.fSpeed = open("Speed.csv", "a", newline="")
 
         self.writerRad = csv.writer(self.fRad)
@@ -58,7 +58,7 @@ class Metrics:
         self.fRad.flush()
 
         #angular
-        self.writerAng.writerow(round(abs(angular - np.pi/2),2) for angular in self.angular)
+        self.writerAng.writerow(round(angular,2) for angular in self.angular)
         self.fAng.flush()
 
         #speed
