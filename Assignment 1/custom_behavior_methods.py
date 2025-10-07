@@ -124,23 +124,24 @@ def RL_circle(
 
     ### Source: ###
     # https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/ #
-    
-    ## Create/Load Q table:
+
+    ## Load tables:
     file_path = Path('q_table.csv') # When executing the file while in the Assignemnt 1 folder
     # file_path = Path('Assignment 1/q_table.csv') # When executing the file while in the Assignemnt 1 parent folder
 
-    # If it doesn't exist, create a Q table
-    if not file_path.exists():
-        # q_table = np.zeros([500, 314]) # 500 states (distance to center in 0.1 increments) and 314 actions (angle to center between 0 and 3.14 in 0.01 increments)
-        # q_table = np.zeros([500, 2]) # 500 states (distance to center in 0.1 increments) and 2 actions (going away from center and opposite)
-        q_table = np.zeros([500, 10]) # 500 states (distance to center in 0.1 increments) and 10 actions (angle to center between 0.785 and 2.355 in 0.157 increments)
-        # q_table = np.zeros([50, 10]) # 50 states (distance to center in 1 increments) and 10 actions (angle to center between 0 and 3.14 in 0.314 increments)
-    else: # Otherwise load the Q table:
-        q_table = np.loadtxt(file_path, delimiter=',')
-
-    ## Old values table:
-    if not hasattr(RL_circle, "old_values"):
+    if not hasattr(RL_circle, "q_table"):
+        # Create/Load Q table:
+        # If it doesn't exist, create a Q table
+        if not file_path.exists():
+            RL_circle.q_table = np.zeros([500, 10]) # 500 states (distance to center in 0.1 increments) and 10 actions (angle to center between 0.785 and 2.355 in 0.157 increments)
+        else: # Otherwise load the Q table:
+            RL_circle.q_table = np.loadtxt(file_path, delimiter=',')
+        
+        # Create old values table:
         RL_circle.old_values = np.zeros([10, 2], dtype=int)
+
+        # File save counter:
+        RL_circle.counter = 0
 
     ## Training:
     # In my RL environment the distance is the state
@@ -169,27 +170,31 @@ def RL_circle(
         if distance == circle_radius:
             reward = 0
 
-        old_value = q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]]
-        next_max = np.max(q_table[distance])
+        old_value = RL_circle.q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]]
+        next_max = np.max(RL_circle.q_table[distance])
 
         new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
-        q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]] = new_value
+        RL_circle.q_table[RL_circle.old_values[agent_id, 0], RL_circle.old_values[agent_id, 1]] = new_value
         
-        # Save the Q table:
-        np.savetxt(file_path, q_table, delimiter=',', fmt='%f')
+        # Save the Q table every once in a while
+        if RL_circle.counter >= 50:
+            RL_circle.counter = 0
+            # Save the Q table:
+            np.savetxt(file_path, RL_circle.q_table, delimiter=',', fmt='%f')
+        RL_circle.counter += 1
 
     # Decide next action:
     if random.uniform(0,1) < epsilon:
-        action = random.randrange(q_table.shape[1]) # Explore action space
+        action = random.randrange(RL_circle.q_table.shape[1]) # Explore action space
     else:
-        action = np.argmax(q_table[distance]) # Exploit learned values
+        action = np.argmax(RL_circle.q_table[distance]) # Exploit learned values
 
     RL_circle.old_values[agent_id, 0] = distance
     RL_circle.old_values[agent_id, 1] = int(action)
 
     ## Set next step:
     # Calculate angular:
-    radian += (action / q_table.shape[1]) * np.pi/2 + np.pi/4
+    radian += (action / RL_circle.q_table.shape[1]) * np.pi/2 + np.pi/4
     diff_radian = WrapToPi(radian - state[2, 0])
     # angular = max_vel[1, 0] * np.sign(diff_radian)
     # angular = np.clip(1 * diff_radian, -max_vel[1, 0], max_vel[1, 0])
