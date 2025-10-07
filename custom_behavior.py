@@ -6,7 +6,7 @@ from irsim.lib import register_behavior
 from irsim.util.util import relative_position, WrapToPi
 from Metrics import Metrics
 
-metrics = Metrics(1)
+metrics = Metrics(3)
 
 R_TARGET: float = 3.0
 S_DIR: int = +1
