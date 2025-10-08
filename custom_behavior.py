@@ -280,24 +280,28 @@ def collision_aware_reward(e_r: float, e_psi: float, v_cmd: float, collision_thr
     """Enhanced reward with collision penalty"""
     base_reward = shaped_reward(e_r, e_psi, v_cmd)
 
+    # 1. Big but not catastrophic crash penalty
     if crashed:
-        return -100.0  # Heavy penalty for collision
-    
-     # Penalty for stopping when no collision threat
-    if abs(v_cmd) < 0.1 and not collision_threat:
-        base_reward -= 2.0  # Penalty for unnecessary stopping
-    
-    if collision_threat:
-        proximity_factor = max(0.1, min_distance / 1.0)  # Normalize by max safe distance
-        collision_penalty = 10.0 / proximity_factor  # Heavy penalty for collision threat
+        return -15.0
 
-        if abs(v_cmd) < 0.1:  # Robot stopped
-            collision_penalty = collision_penalty / 2.0  # Mild penalty for stopping
+    # 2. Encourage moving when safe
+    if not collision_threat and abs(v_cmd) > 0.1:
+        base_reward += 1.0  # encourage movement
+
+    # 3. Discourage unnecessary stopping
+    if not collision_threat and abs(v_cmd) < 0.1:
+        base_reward -= 5.0
+
+    # 4. Penalize being too close, more if moving
+    if collision_threat:
+        proximity_factor = max(0.1, min_distance / 1.0)
+        collision_penalty = min(10.0, 5.0 / proximity_factor)
+        if abs(v_cmd) < 0.1:
+            collision_penalty *= 0.5
         base_reward -= collision_penalty
-    
-    # Reward for maintaining distance
+
+    # 5. Small reward for keeping safe distance
     if min_distance < float('inf'):
-        distance_reward = (min_distance - SAFETY_DISTANCE) * 2.0  # Reward for being further away
-        base_reward += distance_reward
+        base_reward += (min_distance - SAFETY_DISTANCE) * 2.0  
     
     return base_reward
