@@ -6,7 +6,7 @@ import random
 import math
 from Metrics import Metrics
 #default radius on 1
-metrics = Metrics(1)
+metrics = Metrics(10)
 
 @register_behavior("diff", "basic_circle")
 def beh_diff_dash(
@@ -25,6 +25,7 @@ def beh_diff_dash(
         np.array: Velocity [linear, angular] (2x1) for differential drive.
     """
 
+    agent_id = ego_object.id
     state = ego_object.state
     goal = ego_object.goal
     goal_threshold = ego_object.goal_threshold
@@ -41,7 +42,7 @@ def beh_diff_dash(
 
         return np.zeros((2, 1))
 
-    return basic_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, correction_multiplier)
+    return basic_circle(state, goal, max_vel, goal_threshold, angle_tolerance, circle_radius, correction_multiplier, agent_id)
 
 
 def basic_circle(
@@ -52,6 +53,7 @@ def basic_circle(
     angle_tolerance: float = 0.2,
     circle_radius: float = 5,
     correction_multiplier: float = 1,
+    agent_id: int = 10
 ) -> np.ndarray:
     """
     Calculate the differential drive velocity to reach a goal.
@@ -66,6 +68,7 @@ def basic_circle(
     Returns:
         np.array: Velocity [linear, angular] (2x1).
     """
+    metrics.setCircleRadius(circle_radius)
     distance, radian = relative_position(state, goal)
 
     # if distance < goal_threshold:
@@ -87,6 +90,12 @@ def basic_circle(
     #     angular = max_vel[1, 0] * np.sign(diff_radian)
     angular = max_vel[1, 0] * np.sign(diff_radian)
 
+    metrics.update(agent_id, distance)
+    metrics.updateSpeed(agent_id, linear)
+    metrics.updateAngular(agent_id, angular)
+    metrics.print(agent_id)
+    linear = 1
+    angular = 0
     return np.array([[linear], [angular]])
 
 @register_behavior("diff", "RL_circle")
