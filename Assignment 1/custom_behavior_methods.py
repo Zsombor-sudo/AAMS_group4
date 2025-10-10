@@ -94,8 +94,7 @@ def basic_circle(
     metrics.updateSpeed(agent_id, linear)
     metrics.updateAngular(agent_id, angular)
     metrics.print(agent_id)
-    linear = 1
-    angular = 0
+    
     return np.array([[linear], [angular]])
 
 @register_behavior("diff", "RL_circle")

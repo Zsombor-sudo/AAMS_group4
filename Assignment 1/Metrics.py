@@ -58,7 +58,7 @@ class Metrics:
         self.fRad.flush()
 
         #angular
-        self.writerAng.writerow(round(abs(angular),2) for angular in self.angular)
+        self.writerAng.writerow(round(angular,2) for angular in self.angular)
         self.fAng.flush()
 
         #speed
