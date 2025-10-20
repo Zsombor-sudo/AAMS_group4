@@ -17,7 +17,7 @@ robot:
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
     # behavior: {name: 'rvo', vxmax: 1.0, vymax: 1.0, acce: 1.0, factor: 2.0, neighbor_threshold: 5.0}
-    behavior: {name: 'RL_circle', circle_radius: 10, epsilon: 0.1}
+    behavior: {name: 'basic_circle', circle_radius: 10, epsilon: 0.1}
     # behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
     state: [[25.000000, 15.000000, -1.570796],
             [23.090170, 20.877853, -0.942478],

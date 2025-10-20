@@ -6,7 +6,7 @@ for i in range(1):
     env.load_behavior("custom_basic_circle")
     env.load_behavior("custom_RL_circle")
 
-    for _i in range(500):
+    for _i in range(1000):
         env.step()
         env.render(0.01)
 
