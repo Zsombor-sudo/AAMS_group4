@@ -33,10 +33,45 @@ Having gotten a deeper understanding of the IR-Sim library, we started implement
 \subsubsection{Alba}
 
 
-\subsubsection{Krisztián}
+\subsubsection{Q learning with outside table and error shaped reward}
+This solution uses predefined actions and states to fill out an outside Q-table by learning throughout multiple episodes. The predefined states are determined by using data binning, meaning we sort the current state into categories. These categories are determined by computing a relative distance and angle from the robot's pose $(x,y,\theta)$. From these we get a radial and an angle error value, from which we can discretize a $3\times3$ state matrix using the bins:
+\begin{itemize}
+    \item Radius bins: $(-\infty,-0.2]$, $[-0.2, 0.2]$, $[0.2,\infty)$ \; (inside / on / outside).
+    \item Angle bins: $(-\pi,-\pi/4]$, $[-\pi/4, \pi/4]$, $[\pi/4,\pi)$ \; (left / aligned / right).
+\end{itemize}
+The robot's actions are defined by 4 simple actions. These were originally meant to be used for test purposes, but the final results were accurate enough that we didn't need to implement more actions. The actions work by changing the linear and angular velocities of the robot $(v,\omega)$. The actions are built from the robot's limits $(v_{\max}, \omega_{\max})$: fast means $80\%$ of the max linear speed, slow means $40\%$, and turning actions use $80\%$ of the max angular speed:
+\begin{itemize}
+    \item fast forward + turn left
+    \item fast forward straight
+    \item fast forward + turn right
+    \item slow forward straight
+\end{itemize}
+The learning is a Q-learning algorithm, where the learning rate is $0.5$, the discount is $0.9$, and the $\varepsilon$-greedy rate is $0.2$. After each transition the update is:
+\[
+Q^\Pi (s,a) \leftarrow Q^\Pi (s,a) + \alpha \bigl( R + \gamma max_{a} Q^\Pi(s',a') - Q^\Pi(s,a) \bigr).
+\]
+The reward is shaped by penalising radial and heading errors, while rewarding progress along the orbit. Weights are added for normalisation, as you can see in \ref{code:shapedReward}:
+
+\begin{codeblock}{python}{Shaped reward function}{code:shapedReward}
+def shaped_reward(e_r: float, e_psi: float, v_cmd: float) -> float:
+    alpha = 2.0    # weight radial error
+    beta  = 1.0    # weight heading error
+    tan   = 0.4    # weight tangential
+    return float(-alpha * abs(e_r) - beta * abs(e_psi) + tan * (v_cmd * math.cos(e_psi)))
+\end{codeblock}
+
+We used a CSV for the Q table so the learning progress can be saved throughout iterations, and so the model can be trained throughout multiple epochs.
 
 
 \subsubsection{Wouter Jonathan}
+For this version we defined an environment with states based on the distance to the circle center and actions 
 
 
 \subsection{Subsumption Architecture and Obstacle Avoidance}
+
+\subsubsection{Alba}
+
+\subsubsection{Birnir}
+To improve the robot's behavior, an additional layer was introduced to handle collision avoidance. This enhancement expanded the original state space by implementing a binary indicator for detecting threats, wheter a robot is within the safety distance, which indicates a threat, or not, thereby doubling the number of states. The action space was also extended with a new "stop" action, which allows the robot to remain stationary when it detects a collision threat. A new reward function was designed to penalize proximity to other robots, unnecessary stopping, and crashes, while still encouraging progress towards the goal of circular movement. By applying a layered approach, it becomes possible to retain the original navigation behavior while adding a simple safety mechanism that activates only when necessary.
+
+In safe conditions, the robot behaves similarly to the original behavior, navigating around the target in a circular movement. However, when another robot comes within the safety distance, the robot modifies its policy by stopping. This could be expanded by introducing some sort of turning-away behavior to avoid the collisions completely. The behavior develops naturally from the Q-learning updates and the enhanced rewards. When structuring such a system in layers, the robot benefits from a modular implementation where the collision avoidance layer acts as an override mechanism, enhancing robustness in multi-agent scenarios without disrupting the original core objectives.
