@@ -1,6 +1,6 @@
 world:
-  height: 10  # the height of the world
-  width: 10   # the width of the world
+  height: 100  # the height of the world
+  width: 100   # the width of the world
   # step_time: 0.01  # 100Hz calculate each step
   step_time: 0.1  # 10Hz calculate each step
   sample_time: 0.1  # 10 Hz for render and data extraction 
@@ -9,12 +9,18 @@ world:
   control_mode: 'auto'  # 'keyboard', 'auto'
 
 robot:
-  - number: 2
-    distribution: {name: 'circle', radius: 4.0, center: [5, 5]}  
+  # Leader
+  - number: 1
+    distribution: {name: 'manual'} 
     kinematics: {name: 'diff'}
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
-    behavior: {name: 'rvo', vxmax: 1.0, vymax: 1.0, acce: 1.0, factor: 2.0, neighbor_threshold: 5.0}
+    behavior: {name: 'dash'}
+    state: [[1, 1, 0]]
+    goal: [[99, 99, 0]]
+    # behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
+    # state: [[1, 5, 0]]
+    # goal: [[5, 5, 0]]
     vel_min: [-3, -3.0]
     vel_max: [3, 3.0]
     color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
@@ -30,5 +36,28 @@ robot:
       trail_alpha: 0.2
       show_trajectory: false
       keep_trail_length: 15
+    unobstructed: True
+
+  # Followers
+  - number: 4
+    distribution: {name: 'circle', radius: 4.0, center: [5, 5]}  
+    kinematics: {name: 'diff'}
+    shape: 
+      - {name: 'circle', radius: 0.2}  # radius
+    behavior: {name: 'follow_leader'}
+    vel_min: [-3, -3.0]
+    vel_max: [3, 3.0]
+    color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
+    fov: 6.28
+    fov_radius: 2
+    plot:
+      show_fov: true
+      show_trail: true
+      show_goal: false
+      trail_fill: true
+      trail_alpha: 0.2
+      show_trajectory: false
+      keep_trail_length: 15
+    unobstructed: True
 
     
