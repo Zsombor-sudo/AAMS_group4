@@ -8,13 +8,15 @@ followers = env.robot_list[1:]
 
 # ---  Leader path ---
 leader_path = [
-    np.array([[2],[2]]),  # start
+    np.array([[2],[2]]), 
     np.array([[2],[3]]),
     np.array([[3],[3]]),
     np.array([[4],[3]]),
     np.array([[4],[4]]),
     np.array([[4],[5]]),
-    np.array([[5],[5]])   # finish
+    np.array([[5],[5]]),
+    np.array([[5],[6]]), 
+    np.array([[6],[6]])  
 ]
 
 path_index = 0
@@ -60,19 +62,25 @@ def evaporate_pheromone():
 
 def move_follower(follower):
     """
-    Follower moves based purely on pheromone concentrations.
-    No direct communication or knowledge of leader position.
-    Formal ACO transition probability:
-        P_ij = τ_ij^α / Σ_k τ_ik^α
-    where:
-        τ_ij = pheromone intensity at neighbor cell
-        α    = pheromone influence
+    Follower moves based on pheromone concentrations.
+    Slows down if other robots are detected in its FOV.
     """
-
     # Current position and orientation
     pos = follower.state[:2]
     theta = follower.state[2,0]
     x, y = int(round(pos[0,0])), int(round(pos[1,0]))
+
+    # --- Check neighbors in FOV for slowing down ---
+    neighbor_list = follower.get_fov_detected_objects()  # robots in FOV
+    slowdown_factor = 2.0  # default (full speed)
+
+    if neighbor_list:
+        min_distance = min(
+            np.linalg.norm(neighbor.state[:2] - pos) for neighbor in neighbor_list
+        )
+        # Slowdown factor decreases linearly with distance
+        # Closer neighbors -> slower speed, minimum 0.05
+        slowdown_factor = max(0.01, min_distance / 1.0)  
 
     # 4-connected neighbors (up, down, left, right)
     moves = [(1,0), (-1,0), (0,1), (0,-1)]
@@ -91,10 +99,8 @@ def move_follower(follower):
     if len(probs) == 0 or np.sum(probs) == 0:
         return
 
-    # Normalize probabilities (formal ACO)
+    # Normalize probabilities
     probs = np.array(probs) / np.sum(probs)
-
-    # Choose next move probabilistically
     choice = candidates[np.random.choice(len(candidates), p=probs)]
     target = pos + np.array([[choice[0]], [choice[1]]])
 
@@ -104,8 +110,8 @@ def move_follower(follower):
     angle_diff = target_angle - theta
     angle_diff = (angle_diff + np.pi) % (2*np.pi) - np.pi
 
-    # Smooth forward speed, limit angular speed
-    v_forward = 0.15 * np.exp(-3*abs(angle_diff))
+    # Apply slowdown factor to forward speed
+    v_forward = slowdown_factor * 0.15 * np.exp(-3*abs(angle_diff))
     v_angular = np.clip(angle_diff, -max_turn, max_turn)
 
     # Step the follower
