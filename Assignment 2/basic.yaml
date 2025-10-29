@@ -1,6 +1,6 @@
 world:
-  height: 100  # the height of the world
-  width: 100   # the width of the world
+  height: 25  # the height of the world
+  width: 25   # the width of the world
   # step_time: 0.01  # 100Hz calculate each step
   step_time: 0.1  # 10Hz calculate each step
   sample_time: 0.1  # 10 Hz for render and data extraction 
@@ -15,12 +15,12 @@ robot:
     kinematics: {name: 'diff'}
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
-    behavior: {name: 'dash'}
-    state: [[1, 1, 0]]
-    goal: [[99, 99, 0]]
-    # behavior: {name: 'basic_circle', circle_radius: 40, correction_multiplier: 1}
-    # state: [[1, 50, 0]]
-    # goal: [[50, 50, 0]]
+    # behavior: {name: 'dash'}
+    # state: [[1, 1, 0]]
+    # goal: [[99, 99, 0]]
+    behavior: {name: 'basic_circle', circle_radius: 11, correction_multiplier: 1}
+    state: [[1, 12, 0]]
+    goal: [[12, 12, 0]]
     vel_min: [-3, -3.0]
     vel_max: [3, 3.0]
     color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
@@ -45,8 +45,9 @@ robot:
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
     behavior: {name: 'follow_leader'}
-    vel_min: [-6, -6.0]
-    vel_max: [6, 6.0]
+    # behavior: {name: 'follow_leader_line'}
+    vel_min: [-6, -3.0]
+    vel_max: [6, 3.0]
     color: ['red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
     fov: 6.28
     fov_radius: 2

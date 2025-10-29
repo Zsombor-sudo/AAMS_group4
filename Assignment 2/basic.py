@@ -15,6 +15,7 @@ for i in range(1):
         #         for detRob in detected_robots:
                     # print(f'Agent {rob.id} detected agent {detRob.id}')
 
+
         # obs = env.object_factory.create_object(
         #     obj_type= 'obstacle', 
         #     number= 1, 
@@ -59,6 +60,7 @@ for i in range(1):
         #             o.sensor_fov = 0
 
         # env.render(interval= 0.01, mode= "all")
+        env.render(0.01)
 
         if env.done():
             break
