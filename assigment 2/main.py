@@ -33,8 +33,6 @@ pheromone_map = np.zeros(world_size)
 deposit_rate = 1.0
 evaporation_rate = 0.01
 
-alpha = 1.0   # influence of pheromone
-beta = 2.0    # influence of heuristic (distance to leader)
 
 # --- Functions ---
 
@@ -91,7 +89,7 @@ def move_follower(follower):
     for dx, dy in moves:
         nx, ny = x + dx, y + dy
         if 0 <= nx < world_size[0] and 0 <= ny < world_size[1]:
-            tau = pheromone_map[nx, ny]**alpha
+            tau = pheromone_map[nx, ny]
             candidates.append((dx, dy))
             probs.append(tau)
 
