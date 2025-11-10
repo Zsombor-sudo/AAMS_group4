@@ -32,6 +32,8 @@ def sendElection(id):
 
 def bullyRun(agent):
     sendElection(agent.id)
+
+    #time out on 1 seconds for not receiving alive msg
     time.sleep(1)
     if not agent.isAlive:
         network.makeLeader(agent.id)
