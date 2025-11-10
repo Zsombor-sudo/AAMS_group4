@@ -1,0 +1,89 @@
+world:
+  height: 30  # the height of the world
+  width: 30   # the width of the world
+  # step_time: 0.01  # 100Hz calculate each step
+  step_time: 0.1  # 10Hz calculate each step
+  sample_time: 0.1  # 10 Hz for render and data extraction 
+  offset: [0, 0] # the offset of the world on x and y 
+  collision_mode: 'stop'  # 'stop', 'unobstructed',  
+  control_mode: 'auto'  # 'keyboard', 'auto'
+
+
+robot:
+  - number: 5
+    # distribution: {name: 'circle', radius: 4.0, center: [10, 10]}
+    distribution: {name: 'manual'}
+    kinematics: {name: 'diff'}
+    shape: 
+      - {name: 'circle', radius: 0.2}  # radius
+    # behavior: {name: 'rvo', vxmax: 1.0, vymax: 1.0, acce: 1.0, factor: 2.0, neighbor_threshold: 5.0}
+    #behavior: {name: 'follow_agent'}
+    # behavior: {name: 'basic_circle', circle_radius: 5, correction_multiplier: 1}
+    state: [[10, 11, 1.571],
+            [10, 12, 1.571],
+            [10, 13, 1.571],
+            [10, 14, 1.571],
+            [10, 15, 1.571]]
+    goal: [[15, 15, 0]]
+    vel_min: [-3, -3.0]
+    vel_max: [3, 3.0]
+    color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
+    arrive_mode: position
+    goal_threshold: 0.2
+    fov: 6.28
+    fov_radius: 2
+    sensors:
+      - name: 'lidar2d'
+        range_min: 0.1
+        range_max: 5
+        angle_range: 3.14 
+        number: 200
+        noise: False
+        alpha: 0.3
+        detect_robot: True
+    plot:
+      show_trail: true
+      show_goal: true
+      trail_fill: true
+      trail_alpha: 0.2
+      show_trajectory: false
+      keep_trail_length: 15
+    unobstructed: True
+
+# one per robot; make them invisible to the eye but visible to LiDAR
+obstacle:
+  - name: proxy_r1
+    kinematics: { name: 'diff' }
+    shape: { name: 'circle', radius: 0.40 }
+    state: [0, 0, 0]
+    alpha: 0.0        # invisible
+  - name: proxy_r2
+    kinematics: { name: 'diff' }
+    shape: { name: 'circle', radius: 0.40 }
+    state: [0, 0, 0]
+    alpha: 0.0
+  - name: proxy_r3
+    kinematics: { name: 'diff' }
+    shape: { name: 'circle', radius: 0.40 }
+    state: [0, 0, 0]
+    alpha: 0.0
+  - name: proxy_r4
+    kinematics: { name: 'diff' }
+    shape: { name: 'circle', radius: 0.40 }
+    state: [0, 0, 0]
+    alpha: 0.0
+  - name: proxy_r5
+    kinematics: { name: 'diff' }
+    shape: { name: 'circle', radius: 0.40 }
+    state: [0, 0, 0]
+    alpha: 0.0
+  - name: proxy_r6
+    shape: { name: 'circle', radius: 0.40 }
+    state: [14, 14, 0]
+    alpha: 0.0
+
+#obstacle:
+#  - shape: {name: 'circle', radius: 10.0}  # radius
+#    state: [15, 15, 0]
+#    unobstructed: True
+    
