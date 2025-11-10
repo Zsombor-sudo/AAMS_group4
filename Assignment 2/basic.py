@@ -1,21 +1,46 @@
 import math
+import time
 import irsim
 import numpy as np
 from network import Network
+from network import BULLY_MSG
 import types
+import threading
 # MAX SPEED
 V_MAX = 1.0
 PI = 3.1415926
-
+N_NODES = 5
 network = Network()
 
 # Receive message from other agents
 def receive_msg(self, sender, message):
-    print("Got message: "+message+"from "+str(sender))
+    print("New message from"+str(sender))
+    match message:
+        case BULLY_MSG.ELECTION:
+            network.send(self.id,[sender],BULLY_MSG.ALIVE)
+        case BULLY_MSG.ALIVE:
+            self.isAlive = 1
+
 
 #send a message to other agents
 def send_msg(self, targets, message):
     network.send(self.id,targets,message)
+
+def sendElection(id):
+    #send election to higher ranks
+    network.send(id,range(id+1,N_NODES,BULLY_MSG.ELECTION))
+
+def bullyRun(agent):
+    sendElection(agent.id)
+    time.sleep(1)
+    if not agent.isAlive:
+        network.makeLeader(agent.id)
+        print("leader: "+str(agent.id))
+    
+
+
+
+    
 
 for i in range(1):
     env = irsim.make('basic.yaml')
@@ -25,11 +50,16 @@ for i in range(1):
     for agent in env.robot_list:
         agent.receive_msg = types.MethodType(receive_msg, agent)
         agent.send_msg = types.MethodType(send_msg, agent)
+        agent.isAlive = 0
         network.register(agent)
+
+        agent.t = threading.Thread(target=bullyRun,args=(agent,))
+        agent.t.start()
+        agent.t.join()
     agents = env.robot_list
 
     #Example usage:
-    agents[3].send_msg([0,1,2],"Hello!!")
+    #agents[3].send_msg([0,1,2],"Hello!!")
 
     # grab the 5 proxies you defined
     proxies = [o for o in env.obstacle_list if getattr(o, "name", "").startswith("proxy_r")]
