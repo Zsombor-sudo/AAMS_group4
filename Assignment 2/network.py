@@ -18,7 +18,7 @@ class Network:
             self.agents[target].receive_msg(sender_id,message)
     
     def makeLeader(self,id):
-        for agent in self.agents:
-            agent.leaderID = id
+        for id in self.agents:
+            self.agents[id].leaderID = id
     
     

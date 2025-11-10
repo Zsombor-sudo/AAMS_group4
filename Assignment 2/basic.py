@@ -28,7 +28,7 @@ def send_msg(self, targets, message):
 
 def sendElection(id):
     #send election to higher ranks
-    network.send(id,range(id+1,N_NODES,BULLY_MSG.ELECTION))
+    network.send(id,range(id+1,N_NODES),BULLY_MSG.ELECTION)
 
 def bullyRun(agent):
     sendElection(agent.id)
@@ -53,9 +53,12 @@ for i in range(1):
         agent.isAlive = 0
         network.register(agent)
 
+    #need to register all before starting threads
+    for agent in env.robot_list:
         agent.t = threading.Thread(target=bullyRun,args=(agent,))
         agent.t.start()
         agent.t.join()
+
     agents = env.robot_list
 
     #Example usage:
