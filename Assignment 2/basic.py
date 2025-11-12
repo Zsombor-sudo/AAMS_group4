@@ -4,7 +4,7 @@ for i in range(1):
     env = irsim.make(save_ani=False, full=False, display=True)
     # env = irsim.make(save_ani=False, full=True, display=True)
     env.load_behavior("custom_basic_circle")
-    env.load_behavior("custom_follower_behaviour")
+    env.load_behavior("custom_basic_follower")
 
     for _i in range(1000):
         env.step()

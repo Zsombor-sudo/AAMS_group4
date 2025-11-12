@@ -9,37 +9,7 @@ world:
   control_mode: 'auto'  # 'keyboard', 'auto'
 
 robot:
-  # Leader
-  - number: 1
-    distribution: {name: 'manual'} 
-    kinematics: {name: 'diff'}
-    shape: 
-      - {name: 'circle', radius: 0.2}  # radius
-    # behavior: {name: 'dash'}
-    # state: [[1, 1, 0]]
-    # goal: [[99, 99, 0]]
-    behavior: {name: 'basic_circle', circle_radius: 11, correction_multiplier: 1}
-    state: [[1, 12, 0]]
-    goal: [[12, 12, 0]]
-    vel_min: [-3, -3.0]
-    vel_max: [3, 3.0]
-    color: ['royalblue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
-    arrive_mode: position
-    goal_threshold: 0.2
-    fov: 6.28
-    fov_radius: 2
-    plot:
-      show_fov: true
-      show_trail: true
-      show_goal: true
-      trail_fill: true
-      trail_alpha: 0.2
-      show_trajectory: false
-      keep_trail_length: 15
-    unobstructed: True
-
-  # Followers
-  - number: 4
+  - number: 5
     distribution: {name: 'circle', radius: 4.0, center: [5, 5]}  
     kinematics: {name: 'diff'}
     shape: 
