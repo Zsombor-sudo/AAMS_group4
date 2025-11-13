@@ -1,5 +1,3 @@
-import math
-
 import irsim
 import numpy as np
 from irsim.util.util import WrapToPi, relative_position
@@ -11,9 +9,8 @@ followers = env.robot_list[1:]
 
 # Set random goals for leader, no specific goal for followers
 # Random pos between (10,10) and (24,24) 
-for i in range(10):
-    leader_goal = np.random.uniform(10, 24, size=(2, 1))
-    leader.append_goal(leader_goal.flatten().tolist() + [0]) # z=0
+leader_goal = np.random.uniform(10, 24, size=(2, 1))
+leader.set_goal(leader_goal.flatten().tolist() + [0]) # z=0
 
 for follower in followers:
     follower.set_goal([-1,-1,0])  # No specific goal for followers (out of bounds)
@@ -36,6 +33,34 @@ desired_spacing = 1.0     # preferred separation between robots
 slowdown_min = 0.12
 slowdown_max = follower_max_forward
 
+# leader election function
+def elect_new_leader(current_leader: ObjectBase, followers: list[ObjectBase]):
+    """
+    Randomly pick a new leader from the follower list.
+    Returns new leader and updated followers list.
+    """
+    # Reset pheromone map so followers track new leader only
+    global pheromone_map
+    pheromone_map = np.zeros_like(pheromone_map)
+
+    new_leader_idx = np.random.randint(0, len(followers)-1)
+    new_leader = followers.pop(new_leader_idx)
+    followers.append(current_leader)  # demote current leader to follower
+
+    new_leader.color = 'r'      # change color to red
+    current_leader.color = 'g'  # change color to green
+    current_leader.fov = 6.28   # restore FOV for follower
+    current_leader.fov_radius = 1.0
+
+    # Reset goals for new leader and follower
+    new_leader_goal = np.random.uniform(0, 24, size=(2, 1))
+    new_leader.set_goal(new_leader_goal.flatten().tolist() + [0])  # z=0
+    current_leader.set_goal([-1,-1,0])  # no specific goal for follower
+
+    print(f"New leader elected: Robot ID {new_leader.id}")
+    return new_leader, followers
+
+# --- Pheromone functions ---
 def deposit_pheromone(pos):
     """
     Leader drops pheromone at closest grid cell.
@@ -47,7 +72,6 @@ def deposit_pheromone(pos):
     if 0 <= x < world_size[1] and 0 <= y < world_size[0]:
         pheromone_map[y, x] = min(max_pheromone, pheromone_map[y, x] + deposit_rate)
 
-
 def evaporate_pheromone():
     """
     Global pheromone evaporation.
@@ -57,7 +81,7 @@ def evaporate_pheromone():
     global pheromone_map
     pheromone_map *= (1 - evaporation_rate)
 
-def compute_repulsion(follower: ObjectBase, max_vel, decay=4.0):
+def compute_repulsion(follower: ObjectBase, max_vel, decay=3.0):
     """
     Smooth Gaussian repulsion from nearby robots.
     The closer they are, the stronger the push away.
@@ -76,7 +100,7 @@ def compute_repulsion(follower: ObjectBase, max_vel, decay=4.0):
         # Repulsive term — pushes away if neighbor is close
         # The exp(- (distance/decay)^2) makes it strong when distance < decay
         # Math: (v_max * -cos(diff_angle) * exp(- (d/decay)^2)) / (2 * N) where N is number of neighbors
-        linear += (max_vel[0, 0] * (-np.cos(diff_radian)) * math.exp(- (distance / decay)**2)) / (2 * len(neighbor_list))
+        linear += (max_vel[0, 0] * (-np.cos(diff_radian)) * np.exp(- (distance / decay)**2)) / (2 * len(neighbor_list))
 
     return linear
 
@@ -91,7 +115,7 @@ def move_follower(follower: ObjectBase):
     # --- Expand search for pheromone peak ---
     x = int(round(float(pos[0,0])))
     y = int(round(float(pos[1,0])))
-    max_r = 15  # maximum expansion radius
+    max_r = 25  # maximum expansion radius
     best_cell = None
     best_val = -1.0
     for r in range(1, max_r + 1):
@@ -123,7 +147,12 @@ def move_follower(follower: ObjectBase):
     follower.step(np.array([[v_forward], [v_angular]]))
 
 for step in range(3000):
+    # Check if leader reached its goal
     leader.check_arrive_status()
+    if leader.arrive_flag:
+        print(f"Leader reached goal at step {step}. Electing new leader.")
+        leader, followers = elect_new_leader(leader, followers)
+
     pos = leader.state[:2]
     theta = leader.state[2,0]
     goal_pos = leader.goal[0:2]
