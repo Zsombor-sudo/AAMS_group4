@@ -1,0 +1,10 @@
+[project]
+name = "aams-group4-assignment-2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ir-sim[all]>=2.7.5",
+    "numpy>=2.3.4",
+]

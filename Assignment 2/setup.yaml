@@ -1,0 +1,21 @@
+
+world:
+  height: 25  # the height of the world
+  width: 25   # the width of the world
+
+robot:
+  - name: "leader"
+    shape: {name: 'circle', radius: 0.2}
+    kinematics: {name: 'diff'}
+    distribution: {name: 'random', range_low: [0.0, 0.0, 0], range_high: [10.0, 10.0, 0]}
+    color: 'r'  # red
+
+  - number: 4
+    distribution: {name: 'random', range_low: [0.0, 0.0, 0], range_high: [10.0, 10.0, 0]}
+    shape: {name: 'circle', radius: 0.2}
+    kinematics: {name: 'diff'}
+    color: 'g'
+    fov: 6.28
+    fov_radius: 1
+    plot:
+      show_fov: true
