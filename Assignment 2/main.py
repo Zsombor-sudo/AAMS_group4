@@ -33,8 +33,44 @@ desired_spacing = 1.0     # preferred separation between robots
 slowdown_min = 0.12
 slowdown_max = follower_max_forward
 
-# leader election function
-def elect_new_leader(current_leader: ObjectBase, followers: list[ObjectBase]):
+def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list[ObjectBase]):
+    """
+    Sample a new random goal and pick the robot (leader or follower) closest to it as new leader.
+    Resets pheromone map. Returns (new_leader, followers).
+    """
+    # Reset pheromone map so followers track new leader only
+    global pheromone_map
+    pheromone_map = np.zeros_like(pheromone_map)
+
+    # Sample new random goal
+    new_goal = np.random.uniform(10, 24, size=(2, 1))
+
+    # Find closest robot to new goal
+    candidates = [current_leader] + followers
+    dists = []
+    for r in candidates:
+        dist, _ = relative_position(r.state[:2], new_goal)
+        dists.append(dist)
+    closest_idx = int(np.argmin(dists))
+    new_leader = candidates[closest_idx]
+
+    # If the new leader was a follower, adjust lists
+    if new_leader is not current_leader:
+        followers.remove(new_leader)
+        followers.append(current_leader)
+        new_leader.color = 'r'
+
+        # Demote current leader to follower
+        current_leader.color = 'g'
+        current_leader.set_goal([-1,-1,0])  # no specific goal for follower
+    # Else leader stays leader; followers unchanged
+
+    # Assign goal to new leader
+    new_leader.set_goal(new_goal.flatten().tolist() + [0])
+    print(f"New leader (closest to goal) elected: Robot ID {new_leader.id}")
+    return new_leader, followers
+
+def elect_new_leader_random(current_leader: ObjectBase, followers: list[ObjectBase]):
     """
     Randomly pick a new leader from the follower list.
     Returns new leader and updated followers list.
@@ -49,8 +85,6 @@ def elect_new_leader(current_leader: ObjectBase, followers: list[ObjectBase]):
 
     new_leader.color = 'r'      # change color to red
     current_leader.color = 'g'  # change color to green
-    current_leader.fov = 6.28   # restore FOV for follower
-    current_leader.fov_radius = 1.0
 
     # Reset goals for new leader and follower
     new_leader_goal = np.random.uniform(0, 24, size=(2, 1))
@@ -151,7 +185,7 @@ for step in range(3000):
     leader.check_arrive_status()
     if leader.arrive_flag:
         print(f"Leader reached goal at step {step}. Electing new leader.")
-        leader, followers = elect_new_leader(leader, followers)
+        leader, followers = elect_new_leader_closest_to_goal(leader, followers)
 
     pos = leader.state[:2]
     theta = leader.state[2,0]
