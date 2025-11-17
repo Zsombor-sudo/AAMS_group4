@@ -14,7 +14,7 @@ robot:
     plot:
       show_fov: true
 
-  - number: 6
+  - number: 14
     distribution: {name: 'random', range_low: [0.0, 0.0, 0], range_high: [10.0, 10.0, 0]}
     shape: {name: 'circle', radius: 0.2}
     kinematics: {name: 'diff'}

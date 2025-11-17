@@ -43,7 +43,7 @@ def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list
     pheromone_map = np.zeros_like(pheromone_map)
 
     # Sample new random goal
-    new_goal = np.random.uniform(10, 24, size=(2, 1))
+    new_goal = np.random.uniform(0, 25, size=(2, 1))
 
     # Find closest robot to new goal
     candidates = [current_leader] + followers
@@ -87,7 +87,7 @@ def elect_new_leader_random(current_leader: ObjectBase, followers: list[ObjectBa
     current_leader.color = 'g'  # change color to green
 
     # Reset goals for new leader and follower
-    new_leader_goal = np.random.uniform(0, 24, size=(2, 1))
+    new_leader_goal = np.random.uniform(0, 25, size=(2, 1))
     new_leader.set_goal(new_leader_goal.flatten().tolist() + [0])  # z=0
     current_leader.set_goal([-1,-1,0])  # no specific goal for follower
 
