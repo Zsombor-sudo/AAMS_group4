@@ -141,19 +141,21 @@ def move_follower(follower):
     follower.step(np.array([[v_forward], [v_angular]]))
 
 
-for step in range(5000):
+for step in range(2000):
     
     # Check if leader reached its goal
     leader.check_arrive_status()
     if leader.arrive_flag:
-        print(f"Leader reached goal at step {step}. Electing new leader.")
+        print(f"Leader reached goal at step {step}.")
         # DEFINE NEW LEADER GOAL
-        new_goal = np.random.uniform(0, 25, size=(2,))
-        m.set_goal(new_goal.flatten()) 
-        leader.set_goal([new_goal[0], new_goal[1], 0])
+        # new_goal = np.random.uniform(0, 25, size=(2,))
+        # m.set_goal(new_goal.flatten()) 
+        # leader.set_goal([new_goal[0], new_goal[1], 0])
 
         #USING SELECT LEADER FUNCTION
-        #leader, followers = elect_new_leader_closest_to_goal(leader, followers)
+        print(f"Electing new leader.")
+        leader, followers = elect_new_leader_closest_to_goal(leader, followers)
+    
     positions = np.array([r.state[:2,0] for r in env.robot_list])  
     m.update(positions)
     pos = leader.state[:2]
