@@ -22,4 +22,5 @@ robot:
     fov_radius: 1
     plot:
       show_fov: true
+      show_goal: false
 
