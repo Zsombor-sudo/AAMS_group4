@@ -11,7 +11,7 @@ leader = env.robot_list[0]
 followers = env.robot_list[1:]
 
 leader_max_forward = 1  # leader max forward speed
-follower_max_forward = 0.9
+follower_max_forward = 1
 max_turn = 1            # max angular speed
 
 # --- Pheromone parameters ---
@@ -117,7 +117,7 @@ def move_follower(follower):
 
     # --- Check neighbors in FOV for slowing down ---
     neighbor_list = follower.get_fov_detected_objects()  # robots in FOV
-    slowdown_factor = 2.0  # default (full speed)
+    slowdown_factor = 1.0  # default (full speed)
 
     if neighbor_list:
         min_distance = min(
@@ -125,7 +125,7 @@ def move_follower(follower):
         )
         # Slowdown factor decreases linearly with distance
         # Closer neighbors -> slower speed, minimum 0.01
-        slowdown_factor = max(0.01, min_distance / 1.0)  
+        slowdown_factor = max(0.01, min_distance / 1.2)  
 
   
     target = np.array([[best_cell[0]],[best_cell[1]]], dtype=float)
