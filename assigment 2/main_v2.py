@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from irsim.util.util import WrapToPi, relative_position
 from irsim.world.object_base import ObjectBase
 
-env = irsim.make('basic.yaml')
+env = irsim.make('basic_v2.yaml')
 leader = env.robot_list[0]
 followers = env.robot_list[1:]
 
