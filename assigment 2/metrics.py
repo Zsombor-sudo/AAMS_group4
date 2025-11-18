@@ -38,14 +38,6 @@ class Metrics:
             self._w_rank.writerow(hdr)
             self._f_rank.flush()
 
-        # 3) rank→agent mapping per cycle
-        order_path = os.path.join(csv_dir, "rank_orders.csv")
-        self._f_order = open(order_path, "a", newline="")
-        self._w_order = csv.writer(self._f_order)
-        if os.stat(order_path).st_size == 0:
-            self._w_order.writerow(["t_cycle_start"] + [f"rank{i}_agentIndex" for i in range(self.n_agents)])
-            self._f_order.flush()
-
     # ------------ configuration ------------
     def set_goal(self, goal_xy):
         g = np.asarray(goal_xy, dtype=float).reshape(-1)
@@ -63,8 +55,6 @@ class Metrics:
 
         if t_cycle_start is None:
             t_cycle_start = self.time
-        self._w_order.writerow([round(float(t_cycle_start), 3)] + self.rank_order)
-        self._f_order.flush()
 
     # ------------ per-step update ------------
     def update(self, positions_xy):
@@ -105,6 +95,5 @@ class Metrics:
         try:
             self._f_goal.close()
             self._f_rank.close()
-            self._f_order.close()
         except Exception:
             pass
