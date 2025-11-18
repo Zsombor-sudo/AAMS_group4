@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from irsim.util.util import WrapToPi, relative_position
 from irsim.world.object_base import ObjectBase
+from metrics import Metrics
 
-env = irsim.make('basic.yaml')
+env = irsim.make('basic_v2.yaml')
 leader = env.robot_list[0]
 followers = env.robot_list[1:]
 
@@ -19,6 +20,8 @@ pheromone_map = np.zeros(world_size)
 deposit_rate = 1.0
 evaporation_rate = 0.3
 
+m = Metrics(n_agents=len(env.robot_list), tick=0.1, csv_dir="metrics_logs")
+m.set_goal(leader.goal)
 # --- Functions ---
 def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list[ObjectBase]):
     """
@@ -31,6 +34,7 @@ def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list
 
     # Sample new random goal
     new_goal = np.random.uniform(0, 25, size=(2, 1))
+    m.set_goal(new_goal.flatten())
 
     # Find closest robot to new goal
     candidates = [current_leader] + followers
@@ -40,7 +44,8 @@ def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list
         dists.append(dist)
     closest_idx = int(np.argmin(dists))
     new_leader = candidates[closest_idx]
-
+    positions = np.array([r.state[:2,0] for r in env.robot_list])
+    m.set_order_by_leader(positions, leader_idx=closest_idx, t_cycle_start=m.time)
     # If the new leader was a follower, adjust lists
     if new_leader is not current_leader:
         followers.remove(new_leader)
@@ -144,11 +149,13 @@ for step in range(5000):
         print(f"Leader reached goal at step {step}. Electing new leader.")
         # DEFINE NEW LEADER GOAL
         new_goal = np.random.uniform(0, 25, size=(2,))
+        m.set_goal(new_goal.flatten()) 
         leader.set_goal([new_goal[0], new_goal[1], 0])
 
         #USING SELECT LEADER FUNCTION
         #leader, followers = elect_new_leader_closest_to_goal(leader, followers)
-
+    positions = np.array([r.state[:2,0] for r in env.robot_list])  
+    m.update(positions)
     pos = leader.state[:2]
     theta = leader.state[2,0]
     goal_pos = leader.goal[0:2]
@@ -175,10 +182,6 @@ for step in range(5000):
     env.render()
     
     #if env.done(): break # check if the simulation is done
-
-    ax = plt.gca()
-   
-    ax.grid(True)
 
 env.end()
 
