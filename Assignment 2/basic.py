@@ -13,31 +13,67 @@ N_NODES = 5
 network = Network()
 
 # Receive message from other agents
-def receive_msg(self, sender, message):
-    print("New message from"+str(sender))
+def receiveMsg(self, sender, message, arg=0):
+    #print("Message from: "+str(sender))
     match message:
         case BULLY_MSG.ELECTION:
-            network.send(self.id,[sender],BULLY_MSG.ALIVE)
+            if sender<self.id and self.canSendAnything==1:
+                network.send(self.id,[sender],BULLY_MSG.ALIVE)
+                sendElection(self.id)
         case BULLY_MSG.ALIVE:
-            self.isAlive = 1
+            if sender>self.id:
+               waitForVictory(self)
+            else:
+                self.isAlive = 1
+        case BULLY_MSG.VICTORY:
+            #accept the leader
+            self.leaderID = sender
+            self.stopThread = 1
 
 
 #send a message to other agents
-def send_msg(self, targets, message):
+def sendMsg(self, targets, message):
     network.send(self.id,targets,message)
 
 def sendElection(id):
     #send election to higher ranks
     network.send(id,range(id+1,N_NODES),BULLY_MSG.ELECTION)
 
-def bullyRun(agent):
-    sendElection(agent.id)
+def sendVictory(self,id):
+    if self.stopThread == 0 and self.leaderID == -1:    
+        network.send(id,range(0,id-1),BULLY_MSG.VICTORY)
+        print("Leader: "+str(id))
 
-    #time out on 1 seconds for not receiving alive msg
-    time.sleep(1)
-    if not agent.isAlive:
-        network.makeLeader(agent.id)
-        print("leader: "+str(agent.id))
+def waitForVictory(agent):
+    time.sleep(2)
+    if agent.leaderID == -1:
+        sendVictory(agent,agent.id)
+
+
+def bullyRun(agent):
+    #print("agent here: "+str(agent.id))
+    
+    while(True):
+        if agent.id != N_NODES-1:
+            agent.isAlive = 0
+            if agent.canSendAnything == 1:
+                sendElection(agent.id)
+            #time out on 1 seconds for not receiving alive msg
+            time.sleep(1)
+            if agent.stopThread == 1:
+                break
+            if not agent.isAlive:
+                sendVictory(agent,agent.id)
+                break
+        else:
+            sendVictory(agent,agent.id)
+            break
+
+        if agent.stopThread == 1:
+            break
+        #restart when one is dead
+            
+    
     
 
 
@@ -50,17 +86,30 @@ for i in range(1):
 
     
     for agent in env.robot_list:
-        agent.receive_msg = types.MethodType(receive_msg, agent)
-        agent.send_msg = types.MethodType(send_msg, agent)
+        agent.receiveMsg = types.MethodType(receiveMsg, agent)
+        agent.sendMsg = types.MethodType(sendMsg, agent)
+        agent.leaderID = -1
+        agent.canSendAnything = 1
         agent.isAlive = 0
+        agent.kill = -1
+        agent.stopThread = 0
+        
         network.register(agent)
 
     #need to register all before starting threads
     for agent in env.robot_list:
         agent.t = threading.Thread(target=bullyRun,args=(agent,))
         agent.t.start()
-        agent.t.join()
+    #avoid threads blocking eachother 
+    
 
+    time.sleep(2)
+    print("kill")
+    network.killAgent(4)
+    
+
+    for agent in env.robot_list:
+        agent.t.join()
     agents = env.robot_list
 
     #Example usage:
@@ -125,6 +174,7 @@ for i in range(1):
         shape= {'name': 'circle', 'radius': 0.2},
         color= 'red'
         )
+        
         #leaderState.state[0]
         env.add_objects(obs)
         actions.append(np.array([V_MAX,leaderangle]))
