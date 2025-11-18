@@ -44,9 +44,9 @@ robot:
     kinematics: {name: 'diff'}
     shape: 
       - {name: 'circle', radius: 0.2}  # radius
-    # behavior: {name: 'follow_leader_line'}
+    behavior: {name: 'follow_leader_line'}
     # behavior: {name: 'follow_leader'}
-    behavior: {name: 'elect_leader_line'}
+    # behavior: {name: 'elect_leader_line'}
     vel_min: [-6, -3.0]
     vel_max: [6, 3.0]
     color: ['red', 'green', 'orange', 'purple', 'yellow', 'cyan', 'magenta', 'lime', 'pink', 'brown'] 
