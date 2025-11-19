@@ -4,8 +4,94 @@ import numpy as np
 import matplotlib.pyplot as plt
 from irsim.util.util import WrapToPi, relative_position
 from irsim.world.object_base import ObjectBase
+from network import Network
+from network import BULLY_MSG
+import types
+import threading
+import time
+
+N_NODES = 5
+network = Network()
+
+# Receive message from other agents
+def receiveMsg(self, sender, message, arg=0):
+    #print("Message from: "+str(sender))
+    match message:
+        case BULLY_MSG.ELECTION:
+            if sender<self.id and self.canSendAnything==1:
+                network.send(self.id,[sender],BULLY_MSG.ALIVE)
+                sendElection(self.id)
+        case BULLY_MSG.ALIVE:
+            if sender>self.id:
+               waitForVictory(self)
+            else:
+                self.isAlive = 1
+        case BULLY_MSG.VICTORY:
+            #accept the leader
+            self.leaderID = sender
+            self.stopThread = 1
+
+
+#send a message to other agents
+def sendMsg(self, targets, message):
+    network.send(self.id,targets,message)
+
+#helper methods for election message handling
+def sendElection(id):
+    #send election to higher ranks
+    network.send(id,range(id+1,N_NODES),BULLY_MSG.ELECTION)
+
+def sendVictory(self,id):
+    if self.stopThread == 0 and self.leaderID == -1:    
+        network.send(id,range(0,id-1),BULLY_MSG.VICTORY)
+        print("Leader: "+str(id))
+
+def waitForVictory(agent):
+    time.sleep(2)
+    if agent.leaderID == -1:
+        sendVictory(agent,agent.id)
+
+
+
+#run method for agents leader election
+def bullyRun(agent):
+    #print("agent here: "+str(agent.id))
+    
+    while(True):
+        if agent.id != N_NODES-1:
+            agent.isAlive = 0
+            if agent.canSendAnything == 1:
+                sendElection(agent.id)
+            #time out on 1 seconds for not receiving alive msg
+            time.sleep(1)
+            if agent.stopThread == 1:
+                break
+            if not agent.isAlive:
+                sendVictory(agent,agent.id)
+                break
+        else:
+            sendVictory(agent,agent.id)
+            break
+
+        if agent.stopThread == 1:
+            break
+        #restart when one is dead
 
 env = irsim.make('basic.yaml')
+
+for agent in env.robot_list:
+        #add message methods to the agents
+        agent.receiveMsg = types.MethodType(receiveMsg, agent)
+        agent.sendMsg = types.MethodType(sendMsg, agent)
+        
+        network.register(agent)
+
+#need to register all before starting threads
+for agent in env.robot_list:
+    agent.t = threading.Thread(target=bullyRun,args=(agent,))
+    agent.t.start()
+
+
 leader = env.robot_list[0]
 followers = env.robot_list[1:]
 
