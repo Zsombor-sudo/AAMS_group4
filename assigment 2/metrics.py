@@ -34,6 +34,19 @@ class Metrics:
         g = np.asarray(goal_xy).reshape(-1)
         self.goal = g[:2]
     
+    def set_order_by_leader(self, positions_xy, leader_idx=0, t_cycle_start=None):
+        pos = np.asarray(positions_xy, dtype=float).reshape(self.n_agents, 2)
+        leader_pos = pos[leader_idx]
+        dists = np.linalg.norm(pos - leader_pos[None, :], axis=1)
+        order = np.argsort(dists)
+        # ensure leader is rank 0 (helps in tie cases)
+        if order[0] != leader_idx:
+            order = np.array([leader_idx] + [i for i in order if i != leader_idx])
+        self.rank_order = order.tolist()
+
+        if t_cycle_start is None:
+            t_cycle_start = self.time
+
     def update(self, positions_xy):
         pos = np.asarray(positions_xy, dtype=float).reshape(self.n_agents, 2)
         self.time += self.tick
