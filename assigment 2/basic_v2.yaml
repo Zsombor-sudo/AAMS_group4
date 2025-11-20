@@ -1,6 +1,12 @@
 world:
   height: 25  # the height of the world
   width: 25   # the width of the world
+  # step_time: 0.01  # 100Hz calculate each step
+  step_time: 0.1  # 10Hz calculate each step
+  sample_time: 0.1  # 10 Hz for render and data extraction 
+  offset: [0, 0] # the offset of the world on x and y 
+  collision_mode: 'unobstructed'  # 'stop', 'unobstructed',  
+  control_mode: 'auto'  # 'keyboard', 'auto'
 
 robot:
   - name: "leader"
@@ -17,10 +23,9 @@ robot:
     distribution: {name: 'random', range_low: [0.0, 0.0, 0], range_high: [10.0, 10.0, 0]}
     shape: {name: 'circle', radius: 0.2}
     kinematics: {name: 'diff'}
-    color: 'g'
+    color: 'r'
     fov: 1.5
     fov_radius: 1
     plot:
       show_fov: true
-      show_goal: false
 

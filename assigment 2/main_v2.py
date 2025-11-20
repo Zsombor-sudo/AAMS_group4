@@ -6,13 +6,22 @@ from irsim.util.util import WrapToPi, relative_position
 from irsim.world.object_base import ObjectBase
 from metrics import Metrics
 
-env = irsim.make('basic_v2.yaml')
+env = irsim.make('basic_v2.yaml', save_ani=True)
+# env = irsim.make('basic_v2.yaml', save_ani=False)
 leader = env.robot_list[0]
 followers = env.robot_list[1:]
+
+# Set followers to be green and hide their goal points
+for r in followers:
+    r.color = 'g'
+    r.set_goal([-1,-1,0])  # no specific goal for follower
 
 leader_max_forward = 1  # leader max forward speed
 follower_max_forward = 1
 max_turn = 1            # max angular speed
+
+# Define variables to save actions:
+actions = np.zeros((len(env.robot_list), 2))
 
 # --- Pheromone parameters ---
 world_size = (25, 25)
@@ -138,7 +147,8 @@ def move_follower(follower):
     # --- Repulsion (linear term) ---
     v_forward = follower_max_forward * slowdown_factor
 
-    follower.step(np.array([[v_forward], [v_angular]]))
+    # follower.step(np.array([[v_forward], [v_angular]]))
+    actions[follower.id] = [v_forward, v_angular]
 
 
 for step in range(2000):
@@ -148,13 +158,13 @@ for step in range(2000):
     if leader.arrive_flag:
         print(f"Leader reached goal at step {step}.")
         # DEFINE NEW LEADER GOAL
-        new_goal = np.random.uniform(0, 25, size=(2,))
-        m.set_goal(new_goal.flatten()) 
-        leader.set_goal([new_goal[0], new_goal[1], 0])
+        # new_goal = np.random.uniform(0, 25, size=(2,))
+        # m.set_goal(new_goal.flatten()) 
+        # leader.set_goal([new_goal[0], new_goal[1], 0])
 
         #USING SELECT LEADER FUNCTION
-        # print(f"Electing new leader.")
-        # leader, followers = elect_new_leader_closest_to_goal(leader, followers)
+        print(f"Electing new leader.")
+        leader, followers = elect_new_leader_closest_to_goal(leader, followers)
     
     positions = np.array([r.state[:2,0] for r in env.robot_list])  
     m.update(positions)
@@ -167,9 +177,11 @@ for step in range(2000):
     if dist > leader.goal_threshold:
         v_forward = min(leader_max_forward, float(dist))
         v_angular = np.clip(angle_diff, -max_turn, max_turn)
-        leader.step(np.array([[v_forward],[v_angular]]))
+        # leader.step(np.array([[v_forward],[v_angular]]))
+        actions[leader.id] = [v_forward, v_angular]
     else:
-        leader.step(np.zeros((2,1)))
+        # leader.step(np.zeros((2,1)))
+        actions[leader.id] = [0, 0]
 
    
     # --- Pheromone update ---
@@ -180,11 +192,10 @@ for step in range(2000):
     for f in followers:
         move_follower(f)
 
-
-    env.render()
+    env.step(actions.tolist(), action_id = list(range(len(env.robot_list))))
+    env.render(0.05)
     
     #if env.done(): break # check if the simulation is done
 
-env.end()
-
-
+env.end(ending_time=3, suffix='.mp4')
+# env.end()
