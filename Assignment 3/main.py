@@ -72,7 +72,8 @@ def get_target_pos(agent: ObjectBase, action: str):
 
 def is_valid_action(agent: ObjectBase, action: str):
     if action in NO_MOVE_ACTIONS:
-        return True  # noop / collect always valid
+        #TODO: Check collect validity? For now always valid
+        return True  # noop always valid
 
     # Check other agents' positions and targets
     occupied_pos = { cell_pos(a) for a in agents }
@@ -174,6 +175,7 @@ for ep in range(NUM_EPISODES):
 
         for agent in agents:
             step_agent(agent)
+
         if args.mode == "display":
             env.render()
             
