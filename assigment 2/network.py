@@ -20,11 +20,11 @@ class Network:
     def setDistanceToPosition(self,id,distance):
         self.distances[id] = distance
     
-    def send(self, sender_id, targets, message):
+    def send(self, sender_id, targets, message,winnerId):
         if len(targets) < 1:
             return
         for target in targets:
-            self.agents[target].receiveMsg(sender_id,message)
+            self.agents[target].receiveMsg(sender_id,message,winnerId)
     
     def makeLeader(self,id):
         for id in self.agents:
