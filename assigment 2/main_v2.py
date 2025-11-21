@@ -13,7 +13,6 @@ import time
 N_NODES = 5
 network = Network()
 electionRun = True
-goal_pos = {}
 # Receive message from other agents
 def receiveMsg(self, sender, distance, winnerId):
     #print("Message from: "+str(sender))
@@ -73,19 +72,25 @@ def bullyRun(agent):
         while(electionRun==False):
             pass
 
+def leaderElectByRing(goal_pos):
+    agent_0 = network.agents[0]
+    dist = calculateDistanceToGoal(agent_0,goal_pos)
+    sendToNextAgent(0,0,dist)
+    return agent_0.leaderID
+
 env = irsim.make('basic.yaml')
 
 for agent in env.robot_list:
-        #add message methods to the agents
-        agent.receiveMsg = types.MethodType(receiveMsg, agent)
-        agent.sendMsg = types.MethodType(sendMsg, agent)
-        #agent.distanceToGoal = 10*agent.id+5
-        network.register(agent)
+    #add message methods to the agents
+    agent.receiveMsg = types.MethodType(receiveMsg, agent)
+    agent.sendMsg = types.MethodType(sendMsg, agent)
+    #agent.distanceToGoal = 10*agent.id+5
+    network.register(agent)
 
 #need to register all before starting threads
-for agent in env.robot_list:
-    agent.t = threading.Thread(target=bullyRun,args=(agent,))
-    agent.t.start()
+#for agent in env.robot_list:
+#    agent.t = threading.Thread(target=bullyRun,args=(agent,))
+#    agent.t.start()
 
 
 leader = env.robot_list[0]
@@ -113,14 +118,10 @@ def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list
 
     # Sample new random goal
     new_goal = np.random.uniform(0, 25, size=(2, 1))
-
+    
     # Find closest robot to new goal
     candidates = [current_leader] + followers
-    dists = []
-    for r in candidates:
-        dist, _ = relative_position(r.state[:2], new_goal)
-        dists.append(dist)
-    closest_idx = int(np.argmin(dists))
+    closest_idx = leaderElectByRing(new_goal)
     new_leader = candidates[closest_idx]
 
     # If the new leader was a follower, adjust lists
@@ -230,7 +231,6 @@ for step in range(5000):
         leader.set_goal([new_goal[0], new_goal[1], 0])
 
         #USING SELECT LEADER FUNCTION
-        goal_pos = new_goal
         leader, followers = elect_new_leader_closest_to_goal(leader, followers)
 
     pos = leader.state[:2]
@@ -256,13 +256,13 @@ for step in range(5000):
         move_follower(f)
 
 
-    ##env.render()
+    env.render()
     
     #if env.done(): break # check if the simulation is done
 
-    ##ax = plt.gca()
+    ax = plt.gca()
    
-    ##ax.grid(True)
+    ax.grid(True)
 
 env.end()
 
