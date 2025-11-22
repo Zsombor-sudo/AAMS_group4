@@ -7,6 +7,7 @@ class BULLY_MSG(Enum):
 class Network:
     agents = {}
     distances = {}
+    goal = [0,0]
     
     #REGISTER THEM IN ORDER IN TERMS OF IDS!!!
     def register(self, agent):

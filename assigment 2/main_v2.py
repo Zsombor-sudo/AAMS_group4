@@ -13,19 +13,24 @@ import time
 N_NODES = 5
 network = Network()
 electionRun = True
-# Receive message from other agents
+ring_goal = [0,0]
+
+# Receive message handler from other agents
 def receiveMsg(self, sender, distance, winnerId):
-    #print("Message from: "+str(sender))
+    #if sender want to annouce Victory
     if sender == -1:
         self.leaderID = winnerId
         return
+    #if the the first agent 0 receive message, then messages have passed all agents
     if self.id == 0:
         sendVictory(winnerId)
     else:
-        thisAgentDist = calculateDistanceToGoal(self,goal_pos)
+        thisAgentDist = calculateDistanceToGoal(self.id)
         if thisAgentDist < distance:
+            #pass its own distance if it's closer to the goal
             sendToNextAgent(self.id,self.id,thisAgentDist)
         else:
+            #pass the received distance if own distance is not closer
             sendToNextAgent(self.id,winnerId,distance)
 
 
@@ -57,24 +62,25 @@ def sendToNextAgent(senderId,winnerId,distance):
 def start():
     electionRun = True
 
-def calculateDistanceToGoal(agent,goal_pos):
-    dist, _ = relative_position(agent.state[:2],goal_pos)
+def calculateDistanceToGoal(agent_id):
+    dist, _ = relative_position(env.robot_list[agent_id].state[:2],network.goal)
     return dist
 
 #run method for agents leader election
 def bullyRun(agent):
     while(True):
         if agent.id == 0:
-            dist = calculateDistanceToGoal(agent,goal_pos)
+            dist = calculateDistanceToGoal(agent.id,goal_pos)
             sendToNextAgent(0,0,dist)
         
         electionRun = False
         while(electionRun==False):
             pass
 
-def leaderElectByRing(goal_pos):
+def leaderElectByRing(new_goal_pos):
+    network.goal = new_goal_pos
     agent_0 = network.agents[0]
-    dist = calculateDistanceToGoal(agent_0,goal_pos)
+    dist = calculateDistanceToGoal(agent_0.id)
     sendToNextAgent(0,0,dist)
     return agent_0.leaderID
 
@@ -117,7 +123,7 @@ def elect_new_leader_closest_to_goal(current_leader: ObjectBase, followers: list
     pheromone_map = np.zeros_like(pheromone_map)
 
     # Sample new random goal
-    new_goal = np.random.uniform(0, 25, size=(2, 1))
+    new_goal = np.random.uniform(0, 7, size=(2, 1))
     
     # Find closest robot to new goal
     candidates = [current_leader] + followers
@@ -194,16 +200,16 @@ def move_follower(follower):
 
 
     # --- Check neighbors in FOV for slowing down ---
-    neighbor_list = follower.get_fov_detected_objects()  # robots in FOV
+    #neighbor_list = follower.get_fov_detected_objects()  # robots in FOV
     slowdown_factor = 2.0  # default (full speed)
 
-    if neighbor_list:
-        min_distance = min(
-            np.linalg.norm(neighbor.state[:2] - pos) for neighbor in neighbor_list
-        )
-        # Slowdown factor decreases linearly with distance
-        # Closer neighbors -> slower speed, minimum 0.01
-        slowdown_factor = max(0.01, min_distance / 1.0)  
+    #if neighbor_list:
+    #    min_distance = min(
+    #        np.linalg.norm(neighbor.state[:2] - pos) for neighbor in neighbor_list
+    #    )
+    #    # Slowdown factor decreases linearly with distance
+    #    # Closer neighbors -> slower speed, minimum 0.01
+    #    slowdown_factor = max(0.01, min_distance / 1.0)  
 
   
     target = np.array([[best_cell[0]],[best_cell[1]]], dtype=float)
