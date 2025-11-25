@@ -7,12 +7,13 @@ from irsim.world.object_base import ObjectBase
 from irsim.world.world import World
 from matplotlib import pyplot as plt
 from utils import draw_grid, init_labels, update_labels
+from irsim.util.util import relative_position
+
+from enum import Enum
 
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
 EPS = 1e-3
-# ACTION_SPACE = ["up", "down", "left", "right", "collect", "noop"]
-# NO_MOVE_ACTIONS = {"collect", "noop"}
 ACTION_SPACE = ["up", "down", "left", "right"]
 
 parser = argparse.ArgumentParser()
@@ -29,8 +30,14 @@ apples: list[Apple] = []
 agents = env.robot_list
 [setattr(a, "level", 1) for a in agents] 
 
+# Define agent states:
+class AgentState(Enum):
+    EXPLORING = "exploring"
+    WAITING = "waiting"
+    MOVING = "moving"
+
 # Per-agent motion state: Game Theory assumption??? since all agents know others' states
-motion_state = { a.id: { "moving": False, "target_pos": None } for a in agents }
+motion_state = { a.id: { "state": AgentState.EXPLORING, "target_pos": None } for a in agents }
 agent_labels: dict[int, plt.Text] = {}
 apple_labels: dict[int, plt.Text] = {}
 
@@ -63,7 +70,6 @@ def get_direction(action: str):
         case "down":  return np.array([0.0, -1.0])
         case "left":  return np.array([-1.0, 0.0])
         case "right": return np.array([1.0, 0.0])
-        # case "collect" | "noop": return np.array([0.0, 0.0])
         case _: raise ValueError(f"Unknown action {action}")
 
 def get_target_pos(agent: ObjectBase, action: str):
@@ -72,16 +78,12 @@ def get_target_pos(agent: ObjectBase, action: str):
     return (x + int(dir[0]), y + int(dir[1])) 
 
 def is_valid_action(agent: ObjectBase, action: str):
-    # if action in NO_MOVE_ACTIONS:
-    #     #TODO: Check collect validity? For now always valid
-    #     return True  # noop always valid
-
     # Check other agents' positions and targets
     occupied_pos = { cell_pos(a) for a in agents }
     reserved_targets = { 
         motion_state[a.id]["target_pos"] 
         for a in agents 
-        if motion_state[a.id]["moving"] and motion_state[a.id]["target_pos"] is not None
+        if motion_state[a.id]["state"] and motion_state[a.id]["target_pos"] is not None
     }
     occupied_pos = occupied_pos.union(reserved_targets)
 
@@ -102,27 +104,14 @@ def is_valid_action(agent: ObjectBase, action: str):
 
 def begin_action(agent: ObjectBase, action: str):
     curr_state = motion_state[agent.id]
-    # if action in NO_MOVE_ACTIONS:
-    #     curr_state["moving"] = False
-
-        # if action == "collect":
-        #     for apple in apples:
-        #         if not apple.collected and adjacent_to_apple(agent, apple) and agent.level >= apple.level:
-        #             apple.collect()
-        #             env.delete_object(apple.id)
-                    
-        #             print(f"Agent {agent.id} of level {agent.level} collected level {apple.level} apple at {cell_pos(apple)}")
-        #             #TODO: Simple level up for testing, needs reward system
-        #             agent.level += 1 
-        # return
     
     target = get_target_pos(agent, action)
-    curr_state["moving"] = True
+    curr_state["state"] = AgentState.MOVING
     curr_state["target_pos"] = target
 
 def progress_motion(agent: ObjectBase):
     curr_state = motion_state[agent.id]
-    if not curr_state["moving"]:
+    if not curr_state["state"] == AgentState.MOVING:
         return
     
     pos = agent.state[:2].flatten()
@@ -135,16 +124,35 @@ def progress_motion(agent: ObjectBase):
         # Snap to target position to avoid drift
         agent.state[0, 0] = target[0]
         agent.state[1, 0] = target[1]
-        curr_state["moving"] = False
+        curr_state["state"] = AgentState.EXPLORING
 
+        # Check for apples and collect if possible
         for apple in apples:
-            if not apple.collected and adjacent_to_apple(agent, apple) and agent.level >= apple.level:
-                apple.collect()
-                env.delete_object(apple.id)
-                
-                print(f"Agent {agent.id} of level {agent.level} collected level {apple.level} apple at {cell_pos(apple)}")
-                #TODO: Simple level up for testing, needs reward system
-                agent.level += 1
+            if not apple.collected and adjacent_to_apple(agent, apple):
+                total_level = 0
+                adjacent_agents = []
+                # Check for agents surrounding the apple
+                for a in agents:
+                    dist, _ = relative_position(a.state, apple.state)
+                    if dist <= 1.25:
+                        adjacent_agents.append(a)
+                        # Calculate total level of agents around the apple
+                        total_level += a.level
+
+                # Check if total level is enough to collect apple
+                if total_level >= apple.level:
+                    # Collect if possible
+                    apple.collect()
+                    env.delete_object(apple.id)
+                    
+                    for a in adjacent_agents:
+                        print(f"Agent {a.id} of level {a.level} collected level {apple.level} apple at {cell_pos(apple)}")
+                        #TODO: Simple level up for testing, needs reward system
+                        a.level += 1
+                        motion_state[a.id]["state"] = AgentState.EXPLORING
+                else:
+                    # Otherwise set this agent to wait
+                    curr_state["state"] = AgentState.WAITING
         return
 
     direction = diff / dist
@@ -152,13 +160,20 @@ def progress_motion(agent: ObjectBase):
     agent.step(vel.reshape(2, 1)) # [[vx], [vy]]
 
 def step_agent(agent: ObjectBase):
-    curr_state = motion_state[agent.id]
-    if not curr_state["moving"]:
-        action = np.random.choice(ACTION_SPACE)
-        while not is_valid_action(agent, action):
+    curr_state = motion_state[agent.id]["state"]
+
+    match curr_state:
+        case AgentState.EXPLORING:
+            # Pick random action
             action = np.random.choice(ACTION_SPACE)
-        begin_action(agent, action)
-    progress_motion(agent)
+            # Repick a random action until a valid action is picked
+            while not is_valid_action(agent, action):
+                action = np.random.choice(ACTION_SPACE)
+            begin_action(agent, action)
+            progress_motion(agent)
+        case AgentState.WAITING: pass
+        case AgentState.MOVING: progress_motion(agent)
+        case _: raise ValueError(f"Unknown action: {curr_state}")
 
 
 # --- Main loop ---
@@ -169,7 +184,7 @@ for ep in range(NUM_EPISODES):
     for agent in agents:
         agent.state[0,0] = int(np.random.uniform(0, env._world.width+1))
         agent.state[1,0] = int(np.random.uniform(0, env._world.height+1))
-        motion_state[agent.id]["moving"] = False
+        motion_state[agent.id]["state"] = AgentState.EXPLORING
         motion_state[agent.id]["target_pos"] = None
 
     if args.mode == "display":
