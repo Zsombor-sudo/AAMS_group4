@@ -6,7 +6,7 @@ from apple import Apple
 from irsim.world.object_base import ObjectBase
 from irsim.world.world import World
 from matplotlib import pyplot as plt
-from utils import draw_grid, init_labels, update_labels
+from utils import clear_labels, draw_grid, init_labels, update_labels
 
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
@@ -25,6 +25,7 @@ NUM_EPISODES, NUM_STEPS = args.episodes, args.steps
 # --- Initialize environment, agents and apples ---
 env = irsim.make('setup.yaml')
 apples: list[Apple] = []
+next_apple_id: int = 0
 agents = env.robot_list
 [setattr(a, "level", 1) for a in agents] 
 
@@ -34,18 +35,25 @@ agent_labels: dict[int, plt.Text] = {}
 apple_labels: dict[int, plt.Text] = {}
 
 def spawn_apple(x, y, level=1):
-    id = len(apples)
-    apple = Apple(id, x, y, level)
+    global next_apple_id
+    apple = Apple(next_apple_id, x, y, level)
     env.add_object(apple)
     apples.append(apple)
+    next_apple_id += 1
     return apple
 
-# Example apples:
-spawn_apple(5, 5, level=2)
-spawn_apple(8, 3, level=1)
-spawn_apple(2, 7, level=3)
-spawn_apple(10, 6, level=1)
+def spawn_random_apple(level=1):
+    w: World = env._world
+    x = int(np.random.uniform(0, w.width+1))
+    y = int(np.random.uniform(0, w.height+1))
+    return spawn_apple(x, y, level)
 
+def clear_apples():
+    global apples
+    for apple in apples:
+        if not apple.collected:
+            env.delete_object(apple.id)
+    apples = []
 
 # --- Core functions ---
 def cell_pos(agent: ObjectBase):
@@ -109,6 +117,16 @@ def begin_action(agent: ObjectBase, action: str):
                 if not apple.collected and adjacent_to_apple(agent, apple) and agent.level >= apple.level:
                     apple.collect()
                     env.delete_object(apple.id)
+                    spawn_random_apple(apple.level)  # Spawn new apple
+                    
+                    if args.mode == "display": # Fix display after apple collection
+                        env.reset_plot()
+                        draw_grid(ax, env, CELL_SIZE)
+
+                        global agent_labels, apple_labels
+                        clear_labels(agent_labels, apple_labels)
+                        agent_labels, apple_labels = init_labels(ax, agents, apples)
+                        env.render()
                     
                     print(f"Agent {agent.id} of level {agent.level} collected level {apple.level} apple at {cell_pos(apple)}")
                     #TODO: Simple level up for testing, needs reward system
@@ -155,15 +173,23 @@ def step_agent(agent: ObjectBase):
 ax = plt.gca()
 for ep in range(NUM_EPISODES):
     env.reset()
+    # Spawn apples
+    spawn_random_apple(1)
+    spawn_random_apple(1)
+    spawn_random_apple(2)
+    spawn_random_apple(3)
+
     # Randomize agent positions
     for agent in agents:
         agent.state[0,0] = int(np.random.uniform(0, env._world.width+1))
         agent.state[1,0] = int(np.random.uniform(0, env._world.height+1))
+        agent.level = 1  # reset level
         motion_state[agent.id]["moving"] = False
         motion_state[agent.id]["target_pos"] = None
 
     if args.mode == "display":
-        draw_grid(env, CELL_SIZE)
+        env.reset_plot()
+        draw_grid(ax, env, CELL_SIZE)
         env.render()
         agent_labels, apple_labels = init_labels(ax, agents, apples)
 
@@ -178,11 +204,12 @@ for ep in range(NUM_EPISODES):
 
         if args.mode == "display":
             env.render()
-            
             ax.set_title(f"Episode {ep+1} | Step {step+1}")
             update_labels(ax, agent_labels, apple_labels, agents, apples)
 
+    clear_apples()
+    clear_labels(agent_labels, apple_labels)
     print(f"Episode {ep+1} finished.")
 
 print("Simulation ended.")
-env.end()
+# env.end()

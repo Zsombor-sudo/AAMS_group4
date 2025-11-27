@@ -10,8 +10,7 @@ from irsim.world.world import World
 # Grid drawing helper
 # ---------------------------------------------------------------------------
 
-def draw_grid(env: EnvBase, cell_size: float, color: str = "lightgray"):
-    ax = plt.gca()
+def draw_grid(ax: plt.Axes, env: EnvBase, cell_size: float, color: str = "lightgray"):
     w: World = env._world
     x0, x1 = w.x_range
     y0, y1 = w.y_range
@@ -105,3 +104,20 @@ def update_labels(ax: plt.Axes, agent_texts: Dict[int, plt.Text], apple_texts: D
             t.set_visible(True)
             t.set_position((x, y))
             t.set_text(f"L{getattr(ap, 'level', '?')}")
+
+def clear_labels(agent_texts: Dict[int, plt.Text], apple_texts: Dict[int, plt.Text]) -> None:
+    """Remove all label artists from the axes and clear the caches."""
+    for t in agent_texts.values():
+        try:
+            t.remove()
+        except Exception:
+            pass
+
+    for t in apple_texts.values():
+        try:
+            t.remove()
+        except Exception:
+            pass
+
+    agent_texts.clear()
+    apple_texts.clear()
