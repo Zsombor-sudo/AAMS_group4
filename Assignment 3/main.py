@@ -1,5 +1,5 @@
 import argparse
-
+from jal import JointActionLearner
 import irsim
 import numpy as np
 from apple import Apple
@@ -8,7 +8,6 @@ from irsim.world.world import World
 from matplotlib import pyplot as plt
 from utils import draw_grid, init_labels, update_labels
 from irsim.util.util import relative_position
-
 from enum import Enum
 
 CELL_SIZE = 1.0
@@ -22,13 +21,20 @@ parser.add_argument("--episodes", type=int, default=1)
 parser.add_argument("--steps", type=int, default=1000)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
-NUM_EPISODES, NUM_STEPS = args.episodes, args.steps
+NUM_EPISODES, NUM_STEPS, QCSV = args.episodes, args.steps, args.qcsv
 
 # --- Initialize environment, agents and apples ---
 env = irsim.make('setup.yaml')
 apples: list[Apple] = []
 agents = env.robot_list
-[setattr(a, "level", 1) for a in agents] 
+[setattr(a, "level", 1) for a in agents]
+agent_ids = [a.id for a in agents]
+
+jal = JointActionLearner(
+    agent_ids = agent_ids,
+    actions = ACTION_SPACE,
+    csv_path = "qtable.csv",
+)
 
 # Define agent states:
 class AgentState(Enum):
@@ -54,6 +60,22 @@ spawn_apple(8, 3, level=1)
 spawn_apple(2, 7, level=3)
 spawn_apple(10, 6, level=1)
 
+# helpers for jal
+def state_to_string(agents, apples):
+    agent_parts = []
+    for a in sorted(agents, key=lambda ag: ag.id):
+        x, y = cell_pos(a)
+        lvl = getattr(a, "level", 1)
+        agent_parts.append(f"A{a.id}:{x}:{y}:{lvl}")
+
+    apple_parts = []
+    for ap in sorted(apples, key=lambda app: app.id):
+        x, y = cell_pos(ap)
+        apple_parts.append(f"P{ap.id}:{x}:{y}:{ap.level}:{int(ap.collected)}")
+
+    return "|".join(agent_parts) + "$" + "|".join(apple_parts)
+def count_collected_apples(apples):
+    return sum(1 for ap in apples if ap.collected)
 
 # --- Core functions ---
 def cell_pos(agent: ObjectBase):
@@ -80,11 +102,13 @@ def get_target_pos(agent: ObjectBase, action: str):
 def is_valid_action(agent: ObjectBase, action: str):
     # Check other agents' positions and targets
     occupied_pos = { cell_pos(a) for a in agents }
-    reserved_targets = { 
-        motion_state[a.id]["target_pos"] 
-        for a in agents 
-        if motion_state[a.id]["state"] and motion_state[a.id]["target_pos"] is not None
+    reserved_targets = {
+    motion_state[a.id]["target_pos"]
+    for a in agents
+    if motion_state[a.id]["state"] == AgentState.MOVING
+       and motion_state[a.id]["target_pos"] is not None
     }
+
     occupied_pos = occupied_pos.union(reserved_targets)
 
     # Check apple positions
@@ -197,17 +221,48 @@ for ep in range(NUM_EPISODES):
             print(f"All apples collected in episode {ep} at step {step}.")
             env.done()
             break
-
+        
+        state_key = state_to_string(agents, apples)
+        prev_collected = count_collected_apples(apples)
+    
+        joint_action_map, joint_action_idx = jal.select_joint_action(state_key)
+    
         for agent in agents:
-            step_agent(agent)
+            curr = motion_state[agent.id]
+            if curr["state"] != AgentState.MOVING:
+                action = joint_action_map[agent.id]
+    
+                if not is_valid_action(agent, action):
+                    action = np.random.choice(ACTION_SPACE)
+                    while not is_valid_action(agent, action):
+                        action = np.random.choice(ACTION_SPACE)
+    
+                begin_action(agent, action)
+    
+        for agent in agents:
+            progress_motion(agent)
+    
+        new_collected = count_collected_apples(apples)
+        reward = new_collected - prev_collected
+    
+        done = all(a.collected for a in apples)
+        next_state_key = state_to_string(agents, apples)
+    
+        jal.update(
+            state_key=state_key,
+            joint_action_idx=joint_action_idx,
+            reward=reward,
+            next_state_key=next_state_key,
+            done=done,
+        )
+    
+        env.render()
+        ax.set_title(f"Episode {ep+1} | Step {step+1}")
+        update_labels(ax, agent_labels, apple_labels, agents, apples)
 
-        if args.mode == "display":
-            env.render()
-            
-            ax.set_title(f"Episode {ep+1} | Step {step+1}")
-            update_labels(ax, agent_labels, apple_labels, agents, apples)
 
     print(f"Episode {ep+1} finished.")
 
 print("Simulation ended.")
+jal.save()
 env.end()
