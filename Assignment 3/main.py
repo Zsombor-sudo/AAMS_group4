@@ -13,9 +13,7 @@ import random
 
 from enum import Enum
 
-# I added picking a decision based on Q-table,
-# But i still ned to give rewards
-# And save the Q-tables when the simulation is done
+# Q-learning is almost fully implemented, i just need to calculate a reward
 
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
@@ -52,7 +50,7 @@ class AgentState(Enum):
     MOVING = "moving"
 
 # Per-agent motion state: Game Theory assumption??? since all agents know others' states
-motion_state = { a.id: { "state": AgentState.EXPLORING, "target_pos": None } for a in agents }
+motion_state = { a.id: { "state": AgentState.EXPLORING, "target_pos": None, "reward": -1 } for a in agents }
 agent_labels: dict[int, plt.Text] = {}
 apple_labels: dict[int, plt.Text] = {}
 
@@ -166,45 +164,45 @@ def progress_motion(agent: ObjectBase):
         agent.state[1, 0] = target[1]
         curr_state["state"] = AgentState.EXPLORING
 
-        # Check for apples and collect if possible
-        for apple in apples:
-            if not apple.collected and adjacent_to_apple(agent, apple):
-                total_level = 0
-                adjacent_agents = []
-                # Check for agents surrounding the apple
-                for a in agents:
-                    dist, _ = relative_position(a.state, apple.state)
-                    if dist <= 1.25:
-                        adjacent_agents.append(a)
-                        # Calculate total level of agents around the apple
-                        total_level += a.level
+        # # Check for apples and collect if possible
+        # for apple in apples:
+        #     if not apple.collected and adjacent_to_apple(agent, apple):
+        #         total_level = 0
+        #         adjacent_agents = []
+        #         # Check for agents surrounding the apple
+        #         for a in agents:
+        #             dist, _ = relative_position(a.state, apple.state)
+        #             if dist <= 1.25:
+        #                 adjacent_agents.append(a)
+        #                 # Calculate total level of agents around the apple
+        #                 total_level += a.level
 
-                # Check if total level is enough to collect apple
-                if total_level >= apple.level:
-                    # Collect if possible
-                    apple.collect()
-                    env.delete_object(apple.id)
+        #         # Check if total level is enough to collect apple
+        #         if total_level >= apple.level:
+        #             # Collect if possible
+        #             apple.collect()
+        #             env.delete_object(apple.id)
                     
-                    for a in adjacent_agents:
-                        print(f"Agent {a.id} of level {a.level} collected level {apple.level} apple at {cell_pos(apple)}")
-                        #TODO: Simple level up for testing, needs reward system
-                        a.level += 1
-                        motion_state[a.id]["state"] = AgentState.EXPLORING
+        #             for a in adjacent_agents:
+        #                 print(f"Agent {a.id} of level {a.level} collected level {apple.level} apple at {cell_pos(apple)}")
+        #                 #TODO: Simple level up for testing, needs reward system
+        #                 a.level += 1
+        #                 motion_state[a.id]["state"] = AgentState.EXPLORING
                     
-                    # Spawn new apple
-                    # spawn_random_apple(apple.level)  # Spawn new apple
+        #             # Spawn new apple
+        #             # spawn_random_apple(apple.level)  # Spawn new apple
                     
-                    # if args.mode == "display": # Fix display after apple collection
-                    #     env.reset_plot()
-                    #     draw_grid(ax, env, CELL_SIZE)
+        #             # if args.mode == "display": # Fix display after apple collection
+        #             #     env.reset_plot()
+        #             #     draw_grid(ax, env, CELL_SIZE)
 
-                    #     global agent_labels, apple_labels
-                    #     clear_labels(agent_labels, apple_labels)
-                    #     agent_labels, apple_labels = init_labels(ax, agents, apples)
-                    #     env.render()
-                else:
-                    # Otherwise set this agent to wait
-                    curr_state["state"] = AgentState.WAITING
+        #             #     global agent_labels, apple_labels
+        #             #     clear_labels(agent_labels, apple_labels)
+        #             #     agent_labels, apple_labels = init_labels(ax, agents, apples)
+        #             #     env.render()
+        #         else:
+        #             # Otherwise set this agent to wait
+        #             curr_state["state"] = AgentState.WAITING
         return
 
     direction = diff / dist
@@ -216,18 +214,22 @@ def step_agent(agent: ObjectBase):
 
     match curr_state:
         case AgentState.EXPLORING:
+            # Get the current state
+            state = round((agent.state[0,0]+1) * (agent.state[1,0]+1)) - 1
+            # print(state)
+
             # Pick Q-learning action
             if random.random() < epsilon:
                 # Pick random action
-                action = np.random.choice(ACTION_SPACE)
+                actionNum = random.randrange(len(ACTION_SPACE))
+                action = ACTION_SPACE[actionNum]
 
                 # Repick a random action until a valid action is picked
                 while not is_valid_action(agent, action):
-                    action = np.random.choice(ACTION_SPACE)
+                    actionNum = random.randrange(len(ACTION_SPACE))
+                    action = ACTION_SPACE[actionNum]
             else:
                 # Pick the best action according to Q-table
-                state = round((agent.state[0,0]+1) * (agent.state[1,0]+1)) - 1
-                # print(state)
                 actionNum = np.argmax(q_tables[agent.id][state, :])
                 action = ACTION_SPACE[actionNum]
 
@@ -237,7 +239,58 @@ def step_agent(agent: ObjectBase):
                     actionNum = np.argmax(q_tables[agent.id][state, :])
                     action = ACTION_SPACE[actionNum]
 
+            # Start the choosen action
             begin_action(agent, action)
+
+            # Calculate reward
+            # The reward is saved in the motion_state thingy
+            # Here the reward value will be updated if the agent 
+            # does something that is worth rewarding (like picking 
+            # up an apple), and then when a q_value is being 
+            # calculated, the reward is reset
+            
+            # One problem with this is, that if the agent picks up 
+            # an apple, the state doesn't change. So one iteration
+            # the reward will be really high, because of the apple,
+            # so if the agent then tries to exploit its learning,
+            # it would keep trying to pick up the apple, while
+            # recieving a low reward, because the apple is gone and 
+            # then unlearn that it should move towards the apple.
+
+            # I might try and change the state to a collectAttempted 
+            # state, when it tries to collect so that collecting 
+            # twice in a row is valued really low, but this doesn't
+            # fix that it might walk around and try to pick up the
+            # apple again, even after it already did, since the cell 
+            # that previously held the apple, is still saved as a high
+            # value cell.
+            # Hopefully a good configuration of epsilon, alpha, gamma
+            # would reduce this issue
+
+            # A more thorough solution could be to create two states
+            # for each cell, one where an apple hasn't been picked up
+            # and one where it has, but this would double the amount
+            # of total states...
+
+            # I could also have states in the form of how many apples
+            # have been picked up, so that it doesn't reuse the learning
+            # for collecting the first apple, when looking for the second.
+            # But i think the only way to do this is to yet again multiply
+            # the number of states, and i don't know if it is possible to 
+            # do dynamically.
+
+            # Calculate new Q_value:
+            next_state = motion_state[agent.id]["target_pos"]
+            old_value = q_tables[agent.id][state, actionNum]
+            next_max = np.argmax(q_tables[agent.id][next_state, :])
+
+            new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
+            q_tables[agent.id][state, actionNum] = new_value
+
+            # Reset reward
+            motion_state[agent.id]["reward"] = -1
+
+            # Move towards the new state
             progress_motion(agent)
 
         case AgentState.WAITING: 
@@ -306,4 +359,9 @@ for ep in range(NUM_EPISODES):
     print(f"Episode {ep+1} finished.")
 
 print("Simulation ended.")
+
+# for a in agents:
+#     fileName = f'q_table{a.id}.csv'
+#     np.savetxt(folder_path / fileName, q_tables[a.id], delimiter=',', fmt='%f')
+
 env.end()
