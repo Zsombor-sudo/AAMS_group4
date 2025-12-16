@@ -39,7 +39,7 @@ NO_MOVE_ACTIONS = {"collect"}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train", "display"], default="train")
-parser.add_argument("--episodes", type=int, default=1)
+parser.add_argument("--episodes", type=int, default=1000)
 parser.add_argument("--steps", type=int, default=1000)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
@@ -295,7 +295,8 @@ def step_agent(agent: ObjectBase):
             # print(f"Agent {agent.id} got reward: {reward}")
 
             # Calculate new Q_value:
-            next_state = motion_state[agent.id]["target_pos"]
+            next_x, next_y = motion_state[agent.id]["target_pos"]
+            next_state = next_x + (next_y*(width+1))
             old_value = q_tables[agent.id][state, actionNum]
             next_max = np.max(q_tables[agent.id][next_state, :])
             # if agent.id == 0:
