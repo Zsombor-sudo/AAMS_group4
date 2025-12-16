@@ -21,23 +21,35 @@ from enum import Enum
 # but all agents get the reward, so some agents will get a reward for performing
 # a random other action, which is probably not ideal
 
+# After doing some training, it seems that the agents get stuck between two cells.
+# It seems that the agent learns to go back and fourth between two cells and gets 
+# stuck like that. So in cell 1 the agent has learned that it gets the best reward
+# when moving left, but in the left cell, it has learned that the highest reward is
+# achieved by moving right, so it just moves back and fourth between the two.
+# This is probably fixable by just tweaking the reward values as well as alpha and gamma,
+# but maybe some extra check to punish this specific behaviour is needed.
+
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
 EPS = 1e-3
 # ACTION_SPACE = ["up", "down", "left", "right", "collect", "noop"]
 # NO_MOVE_ACTIONS = {"collect", "noop"}
-ACTION_SPACE = ["up", "down", "left", "right", "collect"]
+ACTION_SPACE = ["right", "left", "up", "down", "collect"]
 NO_MOVE_ACTIONS = {"collect"}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train", "display"], default="train")
-parser.add_argument("--episodes", type=int, default=1000)
+parser.add_argument("--episodes", type=int, default=1)
 parser.add_argument("--steps", type=int, default=1000)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
 NUM_EPISODES, NUM_STEPS = args.episodes, args.steps
 # NUM_EPISODES = 2
 # NUM_STEPS = 200
+
+# World size (Make sure these match the values in the .yaml file)
+height = 8
+width = 12
 
 # Learning parameters
 epsilon = 1
@@ -82,7 +94,7 @@ def increase_collected_apples(agent: ObjectBase):
 
     # Update collected apples and Q_table file name
     motion_state[agent.id]["apples"] += 1
-    fileName = f'q_table{a.id}_{motion_state[agent.id]["apples"]}.csv'
+    fileName = f'q_table{agent.id}_{motion_state[agent.id]["apples"]}.csv'
 
     # If it doesn't exist, create a Q table
     if not (folder_path / fileName).exists():
@@ -164,16 +176,14 @@ def is_valid_action(agent: ObjectBase, action: str):
     return (x0 <= x <= x1) and (y0 <= y <= y1)
 
 def begin_action(agent: ObjectBase, action: str):
-    curr_state = motion_state[agent.id]
+    # curr_state = motion_state[agent.id]
     
     if action in NO_MOVE_ACTIONS:
-        curr_state["moving"] = False
-
         if action == "collect":
             # print(f"Agent {agent.id} attempted to collet an apple")
             
             # Reduce reward to punish standing still
-            # motion_state[agent.id]["reward"] = -10
+            motion_state[agent.id]["reward"] = -2
 
             # Check for apples and collect if possible
             for apple in apples:
@@ -195,7 +205,7 @@ def begin_action(agent: ObjectBase, action: str):
                         env.delete_object(apple.id)
                         
                         for a in adjacent_agents:
-                            print(f"Agent {a.id} of level {a.level} collected level {apple.level} apple at {cell_pos(apple)}")
+                            # print(f"Agent {a.id} of level {a.level} collected level {apple.level} apple at {cell_pos(apple)}")
                             #TODO: Simple level up for testing, needs reward system
                             a.level += 1
                             motion_state[a.id]["state"] = AgentState.EXPLORING
@@ -215,16 +225,16 @@ def begin_action(agent: ObjectBase, action: str):
         return
 
     target = get_target_pos(agent, action)
-    curr_state["state"] = AgentState.MOVING
-    curr_state["target_pos"] = target
+    motion_state[agent.id]["state"] = AgentState.MOVING
+    motion_state[agent.id]["target_pos"] = target
 
 def progress_motion(agent: ObjectBase):
-    curr_state = motion_state[agent.id]
-    if not curr_state["state"] == AgentState.MOVING:
+    # curr_state = motion_state[agent.id]
+    if not motion_state[agent.id]["state"] == AgentState.MOVING:
         return
     
     pos = agent.state[:2].flatten()
-    target = curr_state["target_pos"] 
+    target = motion_state[agent.id]["target_pos"] 
     diff = target - pos
     dist = np.linalg.norm(diff)
     
@@ -233,7 +243,7 @@ def progress_motion(agent: ObjectBase):
         # Snap to target position to avoid drift
         agent.state[0, 0] = target[0]
         agent.state[1, 0] = target[1]
-        curr_state["state"] = AgentState.EXPLORING
+        motion_state[agent.id]["state"] = AgentState.EXPLORING
         return
 
     direction = diff / dist
@@ -246,7 +256,8 @@ def step_agent(agent: ObjectBase):
     match curr_state:
         case AgentState.EXPLORING:
             # Get the current state
-            state = round((agent.state[0,0]+1) * (agent.state[1,0]+1)) - 1
+            x, y = cell_pos(agent)
+            state = x + (y*(width+1))
             # print(state)
 
             # Pick Q-learning action
@@ -279,12 +290,16 @@ def step_agent(agent: ObjectBase):
             # does something that is worth rewarding (like picking 
             # up an apple), and then when a q_value is being 
             # calculated, the reward is reset
+
             reward = motion_state[agent.id]["reward"]
+            # print(f"Agent {agent.id} got reward: {reward}")
 
             # Calculate new Q_value:
             next_state = motion_state[agent.id]["target_pos"]
             old_value = q_tables[agent.id][state, actionNum]
-            next_max = np.argmax(q_tables[agent.id][next_state, :])
+            next_max = np.max(q_tables[agent.id][next_state, :])
+            # if agent.id == 0:
+            #     print(f"Agent {agent.id} old_value was {old_value} and next_max is {next_max}")
 
             new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
             q_tables[agent.id][state, actionNum] = new_value
@@ -310,7 +325,8 @@ for ep in range(NUM_EPISODES):
     env.reset()
 
     # Adjust epsilon
-    epsilon -= 1/NUM_EPISODES
+    # epsilon -= 1/NUM_EPISODES
+    epsilon = pow((1 - (ep+1)/NUM_EPISODES), 4) # (1-x)^4
 
     # Spawn apples
     # spawn_random_apple(1)
@@ -337,7 +353,13 @@ for ep in range(NUM_EPISODES):
     #     agent.state[1,0] = int(np.random.uniform(0, env._world.height+1))
         agent.level = 1  # reset level
         motion_state[agent.id]["state"] = AgentState.EXPLORING
-        motion_state[agent.id]["target_pos"] = None
+        motion_state[agent.id]["target_pos"] = cell_pos(agent)
+
+        # Reset Q tables
+        if (motion_state[agent.id]["apples"] != 0):
+            motion_state[agent.id]["apples"] = 0
+            fileName = f'q_table{agent.id}_{motion_state[agent.id]["apples"]}.csv'
+            q_tables[agent.id] = np.loadtxt(folder_path / fileName, delimiter=',')
 
     if (args.mode == "display") or (ep == NUM_EPISODES-1):
         env.reset_plot()
@@ -359,10 +381,13 @@ for ep in range(NUM_EPISODES):
             ax.set_title(f"Episode {ep+1} | Step {step+1}")
             update_labels(ax, agent_labels, apple_labels, agents, apples)
 
+        # Update the q_table files at every step for debugging purposes
+        # for a in agents:
+        #     fileName = f'q_table{a.id}_{motion_state[a.id]["apples"]}.csv'
+        #     np.savetxt(folder_path / fileName, q_tables[a.id], delimiter=',', fmt='%f')
+
     clear_apples()
     clear_labels(agent_labels, apple_labels)
-    for a in agents:
-        motion_state[a.id]["apples"] = 0
     print(f"Episode {ep+1} finished.")
 
 print("Simulation ended.")
