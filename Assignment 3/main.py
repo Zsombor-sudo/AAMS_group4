@@ -32,6 +32,13 @@ agents = env.robot_list
 motion_state = { a.id: { "moving": False, "target_pos": None } for a in agents }
 agent_labels: dict[int, plt.Text] = {}
 apple_labels: dict[int, plt.Text] = {}
+visits = np.zeros((8,8))
+
+def visitTile(x,y):
+    visits(x,y) = 1
+
+def isVisitedTile(x,y):
+    return visits(x,y)
 
 def spawn_apple(x, y, level=1):
     id = len(apples)
