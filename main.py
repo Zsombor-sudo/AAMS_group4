@@ -178,7 +178,7 @@ def is_valid_action(agent: ObjectBase, action: str):
     return (x0 <= x <= x1) and (y0 <= y <= y1)
 
 def calculate_reward(agent: ObjectBase, action: str):
-    reward = -0.2  # Negative reward as time goes
+    reward = -0.1  # Negative reward as time goes
     
     # Need help check for higher level eapples
     need_help, apple_lvl, total_lvl = help_needed(agent)
@@ -233,7 +233,8 @@ def calculate_reward(agent: ObjectBase, action: str):
         #oscilliating penality
         px, py = prev_cell_pos(agent)
         if px==tx and py==ty:
-            return reward - 0.5
+            print("Osc")
+            return reward - 2
         
         d0 = nearest_dist_from_xy(x, y)
         d1 = nearest_dist_from_xy(tx, ty)
