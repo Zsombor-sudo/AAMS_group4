@@ -103,6 +103,9 @@ def clear_apples():
 def cell_pos(agent: ObjectBase):
     return (int(round(agent.state[0,0])), int(round(agent.state[1,0])))
 
+def prev_cell_pos(agent: ObjectBase):
+    return (int(round(agent.prev_state[0,0])), int(round(agent.prev_state[1,0])))
+
 def adjacent_to_apple(agent: ObjectBase, apple: Apple):
     ax, ay = int(apple.state[0,0]), int(apple.state[1,0])
     x, y = cell_pos(agent)
@@ -175,7 +178,7 @@ def is_valid_action(agent: ObjectBase, action: str):
     return (x0 <= x <= x1) and (y0 <= y <= y1)
 
 def calculate_reward(agent: ObjectBase, action: str):
-    reward = -0.1  # Negative reward as time goes
+    reward = -0.2  # Negative reward as time goes
     
     # Need help check for higher level eapples
     need_help, apple_lvl, total_lvl = help_needed(agent)
@@ -227,11 +230,17 @@ def calculate_reward(agent: ObjectBase, action: str):
         x, y = cell_pos(agent)
         tx, ty = get_target_pos(agent, action)
 
+        #oscilliating penality
+        px, py = prev_cell_pos(agent)
+        if px==tx and py==ty:
+            return reward - 0.5
+        
         d0 = nearest_dist_from_xy(x, y)
         d1 = nearest_dist_from_xy(tx, ty)
 
         if d0 is not None and d1 is not None:
-            reward += 0.2 * (d0 - d1)  # closer => positive  farther => negative
+            reward += 0.5 * (d0 - d1)  # closer => positive  farther => negative
+        
     
     return reward
 
@@ -257,6 +266,11 @@ def progress_motion(agent: ObjectBase):
     dist = np.linalg.norm(diff)
     
     if dist < EPS:
+
+        if int(agent.state[0, 0]) != int(target[0]) or int(agent.state[1, 0]) != int(target[1]):
+            agent.prev_state[0,0] = agent.state[0,0]
+            agent.prev_state[1,0] = agent.state[1,0]
+        
         # Snap to target position
         agent.state[0, 0] = target[0]
         agent.state[1, 0] = target[1]
@@ -344,6 +358,10 @@ for ep in range(NUM_EPISODES):
     agents[3].state[0,0] = 12
     agents[3].state[1,0] = 8
     
+    agents[0].prev_state = agents[0].state
+    agents[1].prev_state = agents[1].state
+    agents[2].prev_state = agents[2].state
+    agents[3].prev_state = agents[3].state
     for agent in agents:
         agent.level = 1
         motion_state[agent.id]["state"] = AgentState.EXPLORING
