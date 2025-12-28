@@ -48,7 +48,7 @@ NO_MOVE_ACTIONS = {"collect"}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train", "display"], default="train")
-parser.add_argument("--episodes", type=int, default=2000)
+parser.add_argument("--episodes", type=int, default=1)
 parser.add_argument("--steps", type=int, default=500)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
