@@ -29,6 +29,15 @@ from enum import Enum
 # This is probably fixable by just tweaking the reward values as well as alpha and gamma,
 # but maybe some extra check to punish this specific behaviour is needed.
 
+# Other ideas:
+# Maybe some type of decreasing reward could help. Like it starts 
+# at negative -1 and then for each simulation step, it decreases 
+# by -0.1 or something
+#
+# Some type of check for if the opposite action has been chosen, 
+# could also be implemented. So it would be punished harder if it 
+# goes left then right, as it rarely makes sense to go backwards
+
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
 EPS = 1e-3
@@ -39,8 +48,8 @@ NO_MOVE_ACTIONS = {"collect"}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train", "display"], default="train")
-parser.add_argument("--episodes", type=int, default=1000)
-parser.add_argument("--steps", type=int, default=1000)
+parser.add_argument("--episodes", type=int, default=2000)
+parser.add_argument("--steps", type=int, default=500)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
 NUM_EPISODES, NUM_STEPS = args.episodes, args.steps
@@ -70,7 +79,7 @@ class AgentState(Enum):
     MOVING = "moving"
 
 # Per-agent motion state: Game Theory assumption??? since all agents know others' states
-motion_state = { a.id: { "state": AgentState.EXPLORING, "target_pos": None, "reward": -1, "apples": 0 } for a in agents }
+motion_state = { a.id: { "state": AgentState.EXPLORING, "target_pos": None, "reward": -2, "apples": 0 } for a in agents }
 agent_labels: dict[int, plt.Text] = {}
 apple_labels: dict[int, plt.Text] = {}
 
@@ -84,13 +93,16 @@ for a in agents:
     # If it doesn't exist, create a Q table
     if not (folder_path / fileName).exists():
         q_tables.append(np.zeros([117, len(ACTION_SPACE)]))  # 13*9=117 states
+        # print(f'{fileName} created')
     else: # Otherwise load the Q table:
         q_tables.append(np.loadtxt(folder_path / fileName, delimiter=','))
+        # print(f'{fileName} loaded')
 
 def increase_collected_apples(agent: ObjectBase):
     # Save the Q_table used until now
     fileName = f'q_table{agent.id}_{motion_state[agent.id]["apples"]}.csv'
     np.savetxt(folder_path / fileName, q_tables[agent.id], delimiter=',', fmt='%f')
+    # print(f'{fileName} saved')
 
     # Update collected apples and Q_table file name
     motion_state[agent.id]["apples"] += 1
@@ -99,8 +111,10 @@ def increase_collected_apples(agent: ObjectBase):
     # If it doesn't exist, create a Q table
     if not (folder_path / fileName).exists():
         q_tables[agent.id] = np.zeros([117, len(ACTION_SPACE)])  # 13*9=117 states
+        # print(f'{fileName} created')
     else: # Otherwise load the Q table:
         q_tables[agent.id] = np.loadtxt(folder_path / fileName, delimiter=',')
+        # print(f'{fileName} loaded')
 
 def spawn_apple(x, y, level=1):
     global next_apple_id
@@ -183,11 +197,12 @@ def begin_action(agent: ObjectBase, action: str):
             # print(f"Agent {agent.id} attempted to collet an apple")
             
             # Reduce reward to punish standing still
-            motion_state[agent.id]["reward"] = -2
+            motion_state[agent.id]["reward"] -= 1
 
             # Check for apples and collect if possible
             for apple in apples:
                 if not apple.collected and adjacent_to_apple(agent, apple):
+                    motion_state[agent.id]["reward"] = 1
                     total_level = 0
                     adjacent_agents = []
                     # Check for agents surrounding the apple
@@ -306,7 +321,7 @@ def step_agent(agent: ObjectBase):
             q_tables[agent.id][state, actionNum] = new_value
 
             # Reset reward
-            motion_state[agent.id]["reward"] = -1
+            motion_state[agent.id]["reward"] = -2
 
             # Move towards the new state
             progress_motion(agent)
@@ -327,7 +342,8 @@ for ep in range(NUM_EPISODES):
 
     # Adjust epsilon
     # epsilon -= 1/NUM_EPISODES
-    epsilon = pow((1 - (ep+1)/NUM_EPISODES), 4) # (1-x)^4
+    # epsilon = pow((1 - (ep+1)/NUM_EPISODES), 4) # (1-x)^4
+    epsilon = pow((1 - (ep+1)/NUM_EPISODES), 2) # (1-x)^2
 
     # Spawn apples
     # spawn_random_apple(1)
@@ -358,6 +374,12 @@ for ep in range(NUM_EPISODES):
 
         # Reset Q tables
         if (motion_state[agent.id]["apples"] != 0):
+            # Save current q_table
+            fileName = f'q_table{agent.id}_{motion_state[agent.id]["apples"]}.csv'
+            np.savetxt(folder_path / fileName, q_tables[agent.id], delimiter=',', fmt='%f')
+            # print(f'{fileName} saved')
+
+            # Load no apple q_table
             motion_state[agent.id]["apples"] = 0
             fileName = f'q_table{agent.id}_{motion_state[agent.id]["apples"]}.csv'
             q_tables[agent.id] = np.loadtxt(folder_path / fileName, delimiter=',')
