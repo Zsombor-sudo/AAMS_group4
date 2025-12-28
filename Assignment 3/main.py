@@ -13,30 +13,29 @@ import random
 
 from enum import Enum
 
-# Q-learning is fully implemented, i just need to train and tweak stuff
+# Q-learning is fully implemented, 2000 episode training resulted
+# in a solution that picks up all apples in 207 steps.
 
-# One problem remains in the form of when a high level apple is collected, 
-# it is collected purely based on whether the total level of agents around
-# the apple is sufficient, of course one agent is preforming the collect action,
-# but all agents get the reward, so some agents will get a reward for performing
-# a random other action, which is probably not ideal
+# More optimazation could probably be done, i still haven't implemented
+# a penalty for going backwards or for revisiting a previously visited 
+# cell.
 
-# After doing some training, it seems that the agents get stuck between two cells.
-# It seems that the agent learns to go back and fourth between two cells and gets 
-# stuck like that. So in cell 1 the agent has learned that it gets the best reward
-# when moving left, but in the left cell, it has learned that the highest reward is
-# achieved by moving right, so it just moves back and fourth between the two.
-# This is probably fixable by just tweaking the reward values as well as alpha and gamma,
-# but maybe some extra check to punish this specific behaviour is needed.
+# A penalty for not collecting all apples before the episode ends could
+# maybe also be implemented. I think i would do this by saving everything
+# each agent does, resulting in a record of the path the agent took 
+# (which actions taken in which states and the order in which this happend),
+# and then recalculate the q-values that resulted in this path with a 
+# negative reward.
 
-# Other ideas:
-# Maybe some type of decreasing reward could help. Like it starts 
-# at negative -1 and then for each simulation step, it decreases 
-# by -0.1 or something
-#
-# Some type of check for if the opposite action has been chosen, 
-# could also be implemented. So it would be punished harder if it 
-# goes left then right, as it rarely makes sense to go backwards
+# It might also be interesting to improve the exploration a bit somehow.
+# This would probably improve the likelyhood of the agents comming up
+# with the optimal solution, rather than getting stuck in the first
+# solution they find.
+# One way to do this could be that when a random action is choosen instead
+# of following the q-table, this action is repeated once more, so that the
+# agent takes two steps in this direction. This would make the agent move 
+# further away from it's learned path and hopefully improve the effectiveness
+# of the exploration.
 
 CELL_SIZE = 1.0
 MOVE_SPEED = 1.0 # max=1.0
