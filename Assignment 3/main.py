@@ -335,6 +335,8 @@ def step_agent(agent: ObjectBase):
 
 
 # --- Main loop ---
+results = []
+
 ax = plt.gca()
 for ep in range(NUM_EPISODES):
     env.reset()
@@ -391,7 +393,7 @@ for ep in range(NUM_EPISODES):
 
     for step in range(NUM_STEPS):
         if all(a.collected for a in apples):
-            print(f"All apples collected in episode {ep} at step {step}.")
+            print(f"All apples collected in episode {ep} at step {step+1}.")
             env.done()
             break
 
@@ -410,6 +412,7 @@ for ep in range(NUM_EPISODES):
 
     clear_apples()
     clear_labels(agent_labels, apple_labels)
+    results.append(step+1)
     print(f"Episode {ep+1} finished.")
 
 print("Simulation ended.")
@@ -417,5 +420,8 @@ print("Simulation ended.")
 for a in agents:
     fileName = f'q_table{a.id}_{motion_state[a.id]["apples"]}.csv'
     np.savetxt(folder_path / fileName, q_tables[a.id], delimiter=',', fmt='%f')
+
+results_array = np.array(results)
+np.savetxt(Path(__file__).parent / 'results.csv', results_array, delimiter=',', fmt='%f')
 
 env.end()
