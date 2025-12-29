@@ -47,10 +47,11 @@ NO_MOVE_ACTIONS = {"collect"}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", choices=["train", "display"], default="train")
-parser.add_argument("--episodes", type=int, default=1)
+parser.add_argument("--episodes", type=int, default=2000)
 parser.add_argument("--steps", type=int, default=500)
 parser.add_argument("--qcsv", default="q_table.csv")
 args = parser.parse_args()
+
 NUM_EPISODES, NUM_STEPS = args.episodes, args.steps
 # NUM_EPISODES = 2
 # NUM_STEPS = 200
@@ -61,9 +62,14 @@ width = 12
 
 # Learning parameters
 epsilon = 1
-alpha = 0.5
+alpha = 0.8
 gamma = 0.9
 
+#reward parameters:
+STANDING_REWARD = 3
+COLLECT_APPLE = 100
+NEXT_TO_APPLE_REWARD = 10
+STEP_PENALITY = 0.01
 # --- Initialize environment, agents and apples ---
 env = irsim.make('setup.yaml')
 apples: list[Apple] = []
@@ -196,12 +202,12 @@ def begin_action(agent: ObjectBase, action: str):
             # print(f"Agent {agent.id} attempted to collet an apple")
             
             # Reduce reward to punish standing still
-            motion_state[agent.id]["reward"] -= 1
+            motion_state[agent.id]["reward"] -= STANDING_REWARD
 
             # Check for apples and collect if possible
             for apple in apples:
                 if not apple.collected and adjacent_to_apple(agent, apple):
-                    motion_state[agent.id]["reward"] = 1
+                    motion_state[agent.id]["reward"] = NEXT_TO_APPLE_REWARD
                     total_level = 0
                     adjacent_agents = []
                     # Check for agents surrounding the apple
@@ -225,7 +231,7 @@ def begin_action(agent: ObjectBase, action: str):
                             motion_state[a.id]["state"] = AgentState.EXPLORING
                             
                             # Set agent rewards
-                            motion_state[a.id]["reward"] = 100
+                            motion_state[a.id]["reward"] = COLLECT_APPLE
                             
                             # Update apple state for each agent
                             increase_collected_apples(a)
@@ -396,6 +402,7 @@ for ep in range(NUM_EPISODES):
             break
 
         for agent in agents:
+            motion_state[agent.id]["reward"] -= step*STEP_PENALITY
             step_agent(agent)
 
         if (args.mode == "display") or (ep == NUM_EPISODES-1):
